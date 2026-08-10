@@ -1,18 +1,19 @@
-#include "../inc/calc.hpp"
 #include <iostream>
 
-int main()
-{
-    test::Calculator calc(5, 10);
+#include "./inc/calc.hpp"
+
+int main() {
+    test::Calculator calc(5.0f, 10.0f);
 
     calc.add();
-    float result{};
-    calc.getResult(&result);
-    std::cout << "5 + 10 = " << result << '\n';
+    float res = 0.0f;
+    calc.getResult(&res);
+    std::cout << "5 + 10 = " << res << "\n";
 
+    calc.setOperands(5.0f, 10.0f);
     calc.divide();
-    calc.getResult(&result);
-    std::cout << "5 / 10 = " << result << '\n';
+    calc.getResult(&res);
+    std::cout << "5 / 10 = " << res << "\n";
 
     return 0;
 }

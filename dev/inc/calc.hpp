@@ -1,13 +1,11 @@
 #pragma once
 
-#include <cstdint>
-#include "std_types.hpp"
+#include "./std_types.hpp"
 
-namespace test
-{
-class Calculator
-{
-public:
+namespace test {
+
+class Calculator {
+ public:
     Calculator(float operand1, float operand2);
 
     Status add();
@@ -18,9 +16,10 @@ public:
     Status setOperands(float operand1, float operand2);
     Status getResult(float* res) const;
 
-private:
-    float a{};
-    float b{};
-    float result{};
+ private:
+    float a{0.0f};
+    float b{0.0f};
+    float result{0.0f};
 };
+
 }  // namespace test

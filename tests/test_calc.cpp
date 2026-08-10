@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "calc.hpp"
+#include "inc/calc.hpp"
 
 namespace test {
 
@@ -48,4 +48,4 @@ TEST(CalculatorTest, DivisionByZero) {
     EXPECT_EQ(calc.divide(), Status::E_NOK);
 }
 
-} // namespace test
+}  // namespace test

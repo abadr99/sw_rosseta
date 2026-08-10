@@ -1,10 +1,10 @@
 #pragma once
 
-#include <cstdint>
+namespace test {
 
-enum class
-Status : uint8_t
-{
-    E_OK = 0,
-    E_NOK = 1
+enum class Status {
+    E_OK,
+    E_NOK
 };
+
+}  // namespace test
