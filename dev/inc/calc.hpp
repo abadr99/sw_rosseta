@@ -23,4 +23,4 @@ private:
     float b{};
     float result{};
 };
-}  // namespace tes
+}  // namespace test
