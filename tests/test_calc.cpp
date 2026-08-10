@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include "inc/calc.hpp"
+#include "../dev/inc/calc.hpp"
 
 namespace test {
 
