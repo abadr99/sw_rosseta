@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-cpplint --recursive dev/ tests/
+cpplint --recursive --exclude="/build/" dev/ tests/
