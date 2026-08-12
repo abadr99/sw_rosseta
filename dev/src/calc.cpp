@@ -1,4 +1,4 @@
-#include "../inc/calc.hpp"
+#include "calc.hpp"
 
 #include <iostream>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "./std_types.hpp"
+#include "std_types.hpp"
 
 namespace test {
 

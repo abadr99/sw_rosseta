@@ -7,9 +7,8 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
-file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/*.c"
+set(TEST_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_calc.cpp"
 )
 
 if(TEST_SOURCES)

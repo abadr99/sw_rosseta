@@ -6,5 +6,6 @@ Checks: >
 
 WarningsAsErrors: ''
 
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '(src|inc|dev|tests)/.*'
+
 FormatStyle: file

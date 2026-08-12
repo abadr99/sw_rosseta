@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "./inc/calc.hpp"
+#include "inc/calc.hpp"
 
 int main() {
     test::Calculator calc(5.0f, 10.0f);
