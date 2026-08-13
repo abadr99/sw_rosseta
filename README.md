@@ -1,2 +1,31 @@
-# sw_rosseta
-This is DBT from x86 to RV 
+# SW Rosetta
+
+## Project Structure
+
+```text
+.
+├── build/                 # Compiled binaries and build output
+├── dev/                   # Main application code
+│   ├── inc/               # C++ Header files (.hpp, .h)
+│   ├── src/               # C++ Source files (.cpp)
+│   ├── CMakeLists.txt     # CMake configuration for the dev module
+│   └── main.cpp           # Main entry point for the application
+├── scripts/               # Utility scripts
+├── tests/                 # Unit & Regrestion tests
+├── CMakeLists.txt         # Root CMake configuration
+├── CPPLINT.cfg            # Google C++ linter configuration rules
+└── README.md              # Project documentation
+```
+
+## Commands
+```bash
+cmake -B build -G Ninja
+cmake --build build
+
+./build/dev/rosetta 
+```
+```bash
+# Testing
+ctest --test-dir build --output-on-failure
+python scripts/lint.py -d dev tests
+```
