@@ -29,7 +29,7 @@ cmake --build build
 ### Testing
 ```bash
 # Lint testing
-python scripts/lint.py -d dev
+python ./scripts/cpplint.py --recursive ./dev ./tests
 
 # Unit testing
 ./build/tests/rosetta_unit_test
