@@ -1,0 +1,11 @@
+Checks: >
+  bugprone-*,
+  performance-*,
+  portability-*,
+  readability-*
+
+WarningsAsErrors: ''
+
+HeaderFilterRegex: '(src|inc|dev|tests)/.*'
+
+FormatStyle: file
