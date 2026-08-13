@@ -9,7 +9,7 @@ target_include_directories(sw_rosseta_lib
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
 )
 
-add_executable(rosetta main.cpp)
+add_executable(rosetta src/main.cpp)
 
 target_link_libraries(rosetta
     PRIVATE

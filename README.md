@@ -1,38 +1,28 @@
 # SW Rosetta
+- This tool is used to convert from x86 binary code to RV binary code 
 
-## Project Structure
+## Prerequisites
+Before you begin, ensure you have the following installed:
+* **CMake** (v3.14 or higher)
+* **C++17** compatible compiler (GCC, Clang, or MSVC)
+* **Python 3** (required for the linting script)
 
-```text
-.
-├── build/                 # Compiled binaries and build output
-├── dev/                   # Main application code
-│   ├── inc/               # C++ Header files (.hpp, .h)
-│   ├── src/               # C++ Source files (.cpp)
-│   ├── CMakeLists.txt     # CMake configuration for the dev module
-│   └── main.cpp           # Main entry point for the application
-├── scripts/               # Utility scripts
-├── tests/                 # Unit & Regrestion tests
-├── CMakeLists.txt         # Root CMake configuration
-├── CPPLINT.cfg            # Google C++ linter configuration rules
-└── README.md              # Project documentation
-```
-
-## Commands
-### Building
+### Build the Project
 ```bash
+# Step 1: Generate the build system files
 cmake -B build
+
+# Step 2: Compile the code
 cmake --build build
-
-# Running app
-./build/dev/rosetta 
 ```
-### Testing
+### Run the Application
+```
+./build/dev/rosetta
+```
+### Run the Tests
 ```bash
-# Lint testing
-python ./scripts/cpplint.py --recursive ./dev ./tests
-
 # Unit testing
 ./build/tests/rosetta_unit_test
-# or
+# or using ctest
 ctest --test-dir build --output-on-failure
 ```
