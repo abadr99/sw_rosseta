@@ -18,9 +18,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install cpplint
-        run: pip install cpplint
-
       - name: Run Linter
         run: ./scripts/github/linter/cpplint.sh
 
