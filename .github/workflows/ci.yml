@@ -19,7 +19,7 @@ jobs:
           python-version: '3.12'
 
       - name: Run Linter
-        run: ./scripts/github/linter/cpplint.sh
+        run: bash ./scripts/github/linter/cpplint.sh
 
   Build-Test-Linux:
     runs-on: ubuntu-latest
