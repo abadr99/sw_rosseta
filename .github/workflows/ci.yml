@@ -22,7 +22,7 @@ jobs:
         run: pip install cpplint
 
       - name: Run Linter
-        run: python ./scripts/cpplint.py --recursive ./dev ./tests
+        run: ./scripts/github/linter/cpplint.sh
 
   Build-Test-Linux:
     runs-on: ubuntu-latest
