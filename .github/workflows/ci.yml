@@ -38,3 +38,28 @@ jobs:
         with:
           name: linux-build-artifact
           path: build-linux/
+
+  Build-Test-Windows:
+    runs-on: windows-latest
+    needs: Linter-Test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSYS2 and MinGW
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+
+      - name: Run Windows Build Script
+        run: .\scripts\github\build_test\build_windows.ps1
+        
+      - name: Upload Windows build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-artifact
+          path: build/
