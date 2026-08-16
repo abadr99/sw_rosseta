@@ -27,9 +27,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Configure CMake (Linux)
-        run: cmake -S . -B build-linux
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-ccache
 
+      - name: Configure CMake (Linux)
+        run: >
+          cmake -S . -B build-linux 
+          -DCMAKE_C_COMPILER_LAUNCHER=ccache 
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          
       - name: Build (Linux)
         run: cmake --build build-linux
 
@@ -50,10 +58,10 @@ jobs:
         with:
           msystem: UCRT64
           update: true
+          release: false
+          cache: true
           install: >-
             mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-ninja
 
       - name: Run Windows Build Script
         run: .\scripts\github\build_test\build_windows.ps1
