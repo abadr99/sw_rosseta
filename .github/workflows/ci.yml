@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  Linter-Test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,9 +21,9 @@ jobs:
       - name: Run Linter
         run: bash ./scripts/github/linter/cpplint.sh
 
-  Build-Test-Linux:
+  build-linux:
     runs-on: ubuntu-latest
-    needs: Linter-Test
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
@@ -33,13 +33,10 @@ jobs:
           key: ${{ runner.os }}-ccache
 
       - name: Configure CMake (Linux)
-        run: >
-          cmake -S . -B build-linux 
-          -DCMAKE_C_COMPILER_LAUNCHER=ccache 
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          
+        run: bash ./scripts/github/build_test/configure_linux.sh
+
       - name: Build (Linux)
-        run: cmake --build build-linux
+        run: bash ./scripts/github/build_test/build_linux.sh
 
       - name: Upload Linux build artifacts
         uses: actions/upload-artifact@v4
@@ -47,9 +44,9 @@ jobs:
           name: linux-build-artifact
           path: build-linux/
 
-  Build-Test-Windows:
+  build-win:
     runs-on: windows-latest
-    needs: Linter-Test
+    needs: lint
     steps:
       - uses: actions/checkout@v4
 
