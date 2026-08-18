@@ -39,6 +39,24 @@ jobs:
           name: linux-build-artifact
           path: build-linux/
 
+  test-linux:
+    runs-on: ubuntu-latest
+    needs: build-linux # This draws the line connecting the build and test rectangles
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build-artifact
+          path: build-linux/
+
+      - name: Grant execute permissions
+        run: chmod +x ./build-linux/tests/unit_tests
+
+      - name: Run Google Tests (Linux)
+        run: bash ./scripts/github/build_test/test_linux.sh
+
   build-win:
     runs-on: windows-latest
     needs: lint
@@ -56,3 +74,18 @@ jobs:
         with:
           name: windows-build-artifact
           path: build/
+
+  test-win:
+    runs-on: windows-latest
+    needs: build-win 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Windows build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build-artifact
+          path: build/
+
+      - name: Run Google Tests (Windows)
+        run: .\scripts\github\build_test\test_windows.ps1
