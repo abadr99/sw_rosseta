@@ -420,6 +420,9 @@ _DEFAULT_FILTERS = [
     "-build/include_alpha",
     "-readability/fn_size",
     "-runtime/references",
+    '-legal/copyright',
+    '-build/include_subdir',
+    '-build/include_alpha',
 ]
 
 # The default list of categories suppressed for C (not C++) files.
