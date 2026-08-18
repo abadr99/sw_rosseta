@@ -13,11 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
       - name: Run Linter
         run: bash ./scripts/github/linter/cpplint.sh
 
@@ -50,15 +45,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup MSYS2 and MinGW
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: UCRT64
-          update: true
-          release: false
-          cache: true
-          install: >-
-            mingw-w64-ucrt-x86_64-gcc
+      - name: Configure CMake (Windows)
+        run: .\scripts\github\build_test\configure_windows.ps1
 
       - name: Run Windows Build Script
         run: .\scripts\github\build_test\build_windows.ps1
