@@ -423,6 +423,7 @@ _DEFAULT_FILTERS = [
     '-legal/copyright',
     '-build/include_subdir',
     '-build/include_alpha',
+    '-build/c++17',
 ]
 
 # The default list of categories suppressed for C (not C++) files.
