@@ -7,6 +7,23 @@ Before you begin, ensure you have the following installed:
 * **C++17** compatible compiler (GCC, Clang, or MSVC)
 * **Python 3** (required for the linting script)
 
+### Setup Dependencies
+Before building, you need to download:
+* **LIEF SDK**
+
+#### Linux
+```bash
+# Step 1: Mark dependencies.sh as executable
+chmod +x scripts/setup/dependencies.sh
+# Step 2: Run setup script
+./scripts/setup/dependencies.sh
+```
+#### Windows
+```ps
+placeholder
+```
+
+## Build & Run
 ### Build the Project
 ```bash
 # Step 1: Generate the build system files
