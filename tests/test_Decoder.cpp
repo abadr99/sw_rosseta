@@ -40,3 +40,14 @@ TEST(DecoderTest, InvalidOpcodeFailsGracefully) {
     bool success = decoder.decode_instruction(binary, sizeof(binary), ir);
     EXPECT_FALSE(success);
 }
+
+TEST(InstructionTest, FormatsZydisFlagMasks) {
+    X86Instruction instruction;
+
+    const std::string flags = instruction.get_flags_string(
+        ZYDIS_CPUFLAG_CF | ZYDIS_CPUFLAG_ZF | ZYDIS_CPUFLAG_OF);
+
+    EXPECT_NE(flags.find("CF"), std::string::npos);
+    EXPECT_NE(flags.find("ZF"), std::string::npos);
+    EXPECT_NE(flags.find("OF"), std::string::npos);
+}

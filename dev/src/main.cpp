@@ -25,21 +25,32 @@ int main() {
         }
 
         std::cout << "Decoded: " << ir.name << " (Length: " << (int)ir.length << " bytes)\n";
-        std::cout << "  -> Category: " << ir.category << "\n";
-        std::cout << "  -> Flags Read: " << ir.flags_read << " | Written: " << ir.flags_written << "\n";
+        
+        // Print the human-readable category (e.g., BINARY instead of 15)
+        std::cout << "  -> Category: " << ir.get_category_string() << "\n";
+        
+        // Print the exact CPU flags modified
+        std::cout << "  -> Flags Read: " << ir.get_flags_string(ir.flags_read) 
+                  << " | Written: " << ir.get_flags_string(ir.flags_written) << "\n";
         
         for (uint8_t i = 0; i < ir.operand_count; i++) {
             std::cout << "     Op " << (int)i 
-                      << " Type: " << ir.operands[i].type
-                      << " (Size: " << ir.operands[i].size << " bits)"; // Now prints the bit size!
+                      << " Type: " << ir.get_operand_type_string(i) 
+                      << " (Size: " << ir.operands[i].size << " bits)";
             
             if (ir.is_operand_register(i)) {
-                std::cout << " [Reg ID: " << ir.operands[i].reg.value << "]";
+                // Get the literal register name (e.g., "rax", "rbx")
+                const char* reg_name = ZydisRegisterGetString(ir.operands[i].reg.value);
+                std::cout << " [Reg: " << reg_name << "]";
+            } 
+            else if (ir.operands[i].type == ZYDIS_OPERAND_TYPE_IMMEDIATE) {
+                // Extract and format the raw hexadecimal value
+                std::cout << " [Value: 0x" << std::hex << ir.operands[i].imm.value.u << std::dec << "]";
             }
             std::cout << "\n";
         }
         std::cout << "------------------------------------------\n";
-
+        
         pc += ir.length;
     }
 

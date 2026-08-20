@@ -31,4 +31,9 @@ public:
 
     // Safety helper for the backend
     bool is_operand_register(uint8_t index) const;
+    
+    // --- NEW: Human-Readable Text Generators ---
+    std::string get_category_string() const;
+    std::string get_operand_type_string(uint8_t index) const;
+    std::string get_flags_string(uint32_t mask) const;
 };

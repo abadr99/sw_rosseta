@@ -31,3 +31,39 @@ bool X86Instruction::is_operand_register(uint8_t index) const {
     if (index >= operand_count) return false;
     return operands[index].type == ZYDIS_OPERAND_TYPE_REGISTER;
 }
+
+std::string X86Instruction::get_category_string() const {
+    // Zydis has a built-in converter for Category IDs
+    const char* cat_str = ZydisCategoryGetString(category);
+    return cat_str ? std::string(cat_str) : "UNKNOWN";
+}
+
+std::string X86Instruction::get_operand_type_string(uint8_t index) const {
+    if (index >= operand_count) return "NONE";
+    switch (operands[index].type) {
+        case ZYDIS_OPERAND_TYPE_REGISTER:  return "Register";
+        case ZYDIS_OPERAND_TYPE_MEMORY:    return "Memory";
+        case ZYDIS_OPERAND_TYPE_POINTER:   return "Pointer";
+        case ZYDIS_OPERAND_TYPE_IMMEDIATE: return "Immediate";
+        default:                           return "Unknown";
+    }
+}
+
+std::string X86Instruction::get_flags_string(uint32_t mask) const {
+    if (mask == 0) return "None";
+    
+    std::string res = "[";
+    // ZYDIS_CPUFLAG_* values are masks, not bit positions.
+    if (mask & ZYDIS_CPUFLAG_CF) res += " CF"; // Carry Flag
+    if (mask & ZYDIS_CPUFLAG_PF) res += " PF"; // Parity Flag
+    if (mask & ZYDIS_CPUFLAG_AF) res += " AF"; // Adjust Flag
+    if (mask & ZYDIS_CPUFLAG_ZF) res += " ZF"; // Zero Flag
+    if (mask & ZYDIS_CPUFLAG_SF) res += " SF"; // Sign Flag
+    if (mask & ZYDIS_CPUFLAG_TF) res += " TF"; // Trap Flag
+    if (mask & ZYDIS_CPUFLAG_IF) res += " IF"; // Interrupt Flag
+    if (mask & ZYDIS_CPUFLAG_DF) res += " DF"; // Direction Flag
+    if (mask & ZYDIS_CPUFLAG_OF) res += " OF"; // Overflow Flag
+    res += " ]";
+    
+    return res;
+}
