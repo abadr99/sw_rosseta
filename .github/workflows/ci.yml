@@ -51,8 +51,8 @@ jobs:
           name: linux-build-artifact
           path: build-linux/
 
-      - name: Grant execute permissions
-        run: chmod +x ./build-linux/tests/unit_tests
+      - name: Configure Test Environment (Linux)
+        run: bash ./scripts/github/build_test/Test_config_linux.sh
 
       - name: Run Google Tests (Linux)
         run: bash ./scripts/github/build_test/test_linux.sh

@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cmake --build build-linux
+SCRIPT_PATH="$(cd "$(dirname -- "$0")" && pwd -P)"
+PROJECT_ROOT="$(cd "$SCRIPT_PATH/../../.." && pwd -P)"
+
+make -C "$PROJECT_ROOT/build-linux"
