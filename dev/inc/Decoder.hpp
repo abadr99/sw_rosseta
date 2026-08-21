@@ -1,18 +1,21 @@
 #pragma once
 
 #include "Instructions.hpp"
-#include <cstdint>
 #include <cstddef>
+#include <cstdint>
+#include <optional>
 #include <Zydis/Zydis.h>
 
 class Decoder {
 private:
     ZydisDecoder z_decoder;
+    ZydisFormatter z_formatter;
 
 public:
-    Decoder(); 
-    
-    // Returns true if successful, false if the bytes were invalid/garbage
-    // The decoded data is pushed into 'out_inst'
-    bool decode_instruction(const uint8_t* data, size_t length, X86Instruction& out_inst);
+    Decoder();
+
+    // Decodes one instruction at `vma`. `length` bounds reads from `buffer`.
+    // Returns std::nullopt for null, incomplete, or invalid instruction bytes.
+    std::optional<X86Instruction> decode(uint64_t vma, const uint8_t* buffer,
+                                         size_t length);
 };

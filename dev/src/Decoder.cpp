@@ -1,21 +1,33 @@
 #include "Decoder.hpp"
 
 Decoder::Decoder() {
-    // Upgraded to 64-bit machine mode and 64-bit stack width
+    // Decode 64-bit x86 instructions and render them in Intel syntax.
     ZydisDecoderInit(&z_decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
+    ZydisFormatterInit(&z_formatter, ZYDIS_FORMATTER_STYLE_INTEL);
 }
 
-bool Decoder::decode_instruction(const uint8_t* data, size_t length, X86Instruction& out_inst) {
+std::optional<X86Instruction> Decoder::decode(uint64_t vma, const uint8_t* buffer,
+                                              size_t length) {
+    if (!buffer || !length) {
+        return std::nullopt;
+    }
+
     ZydisDecodedInstruction instruction;
     ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
 
-    // Decode the 64-bit bytes
-    if (ZYAN_SUCCESS(ZydisDecoderDecodeFull(&z_decoder, data, length, &instruction, operands))) {
-        // If successful, populate the passed-in object and return true
-        out_inst.populate(instruction, operands);
-        return true;
-    } 
-    
-    // If it fails (e.g. invalid opcode), gracefully return false
-    return false;
+    if (!ZYAN_SUCCESS(
+            ZydisDecoderDecodeFull(&z_decoder, buffer, length, &instruction, operands))) {
+        return std::nullopt;
+    }
+
+    char formatted[256];
+    if (!ZYAN_SUCCESS(ZydisFormatterFormatInstruction(
+            &z_formatter, &instruction, operands, instruction.operand_count_visible,
+            formatted, sizeof(formatted), vma, ZYAN_NULL))) {
+        return std::nullopt;
+    }
+
+    X86Instruction decoded;
+    decoded.populate(vma, instruction, operands, formatted);
+    return decoded;
 }

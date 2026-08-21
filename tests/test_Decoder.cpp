@@ -4,17 +4,19 @@
 
 TEST(DecoderTest, Decode64BitAdd) {
     Decoder decoder;
-    X86Instruction ir;
-    
-    // 64-bit: add rax, rcx (0x48 is the REX.W prefix)
-    uint8_t binary[] = {0x48, 0x01, 0xC8};
+    // 64-bit: add rax, rbx (0x48 is the REX.W prefix)
+    const uint8_t binary[] = {0x48, 0x01, 0xD8};
     
     // 1. Ensure it decodes successfully
-    bool success = decoder.decode_instruction(binary, sizeof(binary), ir);
-    EXPECT_TRUE(success);
+    const auto decoded = decoder.decode(0x00400000, binary, sizeof(binary));
+    ASSERT_TRUE(decoded.has_value());
+    const X86Instruction& ir = *decoded;
     
     // 2. Check Core Identity
     EXPECT_EQ(ir.name, "add");
+    EXPECT_EQ(ir.mnemonic, ZYDIS_MNEMONIC_ADD);
+    EXPECT_EQ(ir.address, 0x00400000);
+    EXPECT_EQ(ir.text, "add rax, rbx");
     EXPECT_EQ(ir.length, 3);
     EXPECT_EQ(ir.operand_count, 2);
     
@@ -23,22 +25,20 @@ TEST(DecoderTest, Decode64BitAdd) {
     EXPECT_EQ(ir.operands[0].reg.value, ZYDIS_REGISTER_RAX);
     EXPECT_EQ(ir.operands[0].size, 64);
     
-    // 4. Check Source (rcx)
+    // 4. Check Source (rbx)
     EXPECT_TRUE(ir.is_operand_register(1));
-    EXPECT_EQ(ir.operands[1].reg.value, ZYDIS_REGISTER_RCX);
+    EXPECT_EQ(ir.operands[1].reg.value, ZYDIS_REGISTER_RBX);
     EXPECT_EQ(ir.operands[1].size, 64);
 }
 
 TEST(DecoderTest, InvalidOpcodeFailsGracefully) {
     Decoder decoder;
-    X86Instruction ir;
     
     // 0xFF 0xFF is an invalid x86 opcode instruction
     uint8_t binary[] = {0xFF, 0xFF};
     
     // Should return false and NOT crash the emulator
-    bool success = decoder.decode_instruction(binary, sizeof(binary), ir);
-    EXPECT_FALSE(success);
+    EXPECT_FALSE(decoder.decode(0x00400000, binary, sizeof(binary)).has_value());
 }
 
 TEST(InstructionTest, FormatsZydisFlagMasks) {

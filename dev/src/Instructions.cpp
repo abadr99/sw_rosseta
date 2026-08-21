@@ -1,8 +1,15 @@
 #include "Instructions.hpp"
 
-void X86Instruction::populate(const ZydisDecodedInstruction& z_inst, const ZydisDecodedOperand* z_ops) {
+#include <utility>
+
+void X86Instruction::populate(uint64_t instruction_address,
+                              const ZydisDecodedInstruction& z_inst,
+                              const ZydisDecodedOperand* z_ops,
+                              std::string disassembly) {
     // 1. Core Identity
     name = ZydisMnemonicGetString(z_inst.mnemonic);
+    text = std::move(disassembly);
+    address = instruction_address;
     mnemonic = z_inst.mnemonic;
     length = z_inst.length;
 
@@ -36,17 +43,6 @@ std::string X86Instruction::get_category_string() const {
     // Zydis has a built-in converter for Category IDs
     const char* cat_str = ZydisCategoryGetString(category);
     return cat_str ? std::string(cat_str) : "UNKNOWN";
-}
-
-std::string X86Instruction::get_operand_type_string(uint8_t index) const {
-    if (index >= operand_count) return "NONE";
-    switch (operands[index].type) {
-        case ZYDIS_OPERAND_TYPE_REGISTER:  return "Register";
-        case ZYDIS_OPERAND_TYPE_MEMORY:    return "Memory";
-        case ZYDIS_OPERAND_TYPE_POINTER:   return "Pointer";
-        case ZYDIS_OPERAND_TYPE_IMMEDIATE: return "Immediate";
-        default:                           return "Unknown";
-    }
 }
 
 std::string X86Instruction::get_flags_string(uint32_t mask) const {

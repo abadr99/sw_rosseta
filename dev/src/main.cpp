@@ -1,6 +1,7 @@
 #include "Decoder.hpp"
 #include <iostream>
 #include <vector>
+#include <iomanip>
 
 int main() {
     std::cout << "--- sw_rosetta: 64-bit x86 to RISC-V Translator ---\n\n";
@@ -8,50 +9,41 @@ int main() {
     Decoder decoder;
 
     // Authentic 64-bit instructions:
-    // 1. add rax, rcx          (0x48, 0x01, 0xC8) -> 48 is the REX.W prefix for 64-bit
-    // 2. mov rbx, 0x12345678   (0x48, 0xC7, 0xC3, 0x78, 0x56, 0x34, 0x12)
     std::vector<uint8_t> x86_64_binary = {
-        0x48, 0x01, 0xC8, 
-        0x48, 0xC7, 0xC3, 0x78, 0x56, 0x34, 0x12
+        0x48, 0x01, 0xC8,                         // add rax, rcx
+        0x48, 0xC7, 0xC3, 0x78, 0x56, 0x34, 0x12, // mov rbx, 0x12345678
+        0x8B, 0x44, 0x8B, 0x10                    // mov eax, [rbx + rcx*4 + 0x10]
     };
 
+    // We start executing at an arbitrary virtual memory address
+    uint64_t vma = 0x400000; 
     size_t pc = 0;
-    X86Instruction ir; // Create an empty instruction container
 
     while (pc < x86_64_binary.size()) {
-        if (!decoder.decode_instruction(&x86_64_binary[pc], x86_64_binary.size() - pc, ir)) {
-            std::cerr << "Hardware Fault: Invalid opcode detected at PC " << pc << "\n";
+        // Use the new std::optional decode method!
+        auto result = decoder.decode(vma, &x86_64_binary[pc], x86_64_binary.size() - pc);
+
+        if (!result.has_value()) {
+            std::cerr << "Hardware Fault: Invalid opcode detected at VMA 0x" 
+                      << std::hex << vma << "\n";
             break; 
         }
 
-        std::cout << "Decoded: " << ir.name << " (Length: " << (int)ir.length << " bytes)\n";
+        X86Instruction ir = result.value();
+
+        // Print the beautifully formatted assembly string provided by ZydisFormatter
+        std::cout << "0x" << std::hex << ir.address << std::dec << ": " << ir.text << "\n";
         
-        // Print the human-readable category (e.g., BINARY instead of 15)
+        // Print the metadata
+        std::cout << "  -> Length:   " << (int)ir.length << " bytes\n";
         std::cout << "  -> Category: " << ir.get_category_string() << "\n";
-        
-        // Print the exact CPU flags modified
         std::cout << "  -> Flags Read: " << ir.get_flags_string(ir.flags_read) 
                   << " | Written: " << ir.get_flags_string(ir.flags_written) << "\n";
         
-        for (uint8_t i = 0; i < ir.operand_count; i++) {
-            std::cout << "     Op " << (int)i 
-                      << " Type: " << ir.get_operand_type_string(i) 
-                      << " (Size: " << ir.operands[i].size << " bits)";
-            
-            if (ir.is_operand_register(i)) {
-                // Get the literal register name (e.g., "rax", "rbx")
-                const char* reg_name = ZydisRegisterGetString(ir.operands[i].reg.value);
-                std::cout << " [Reg: " << reg_name << "]";
-            } 
-            else if (ir.operands[i].type == ZYDIS_OPERAND_TYPE_IMMEDIATE) {
-                // Extract and format the raw hexadecimal value
-                std::cout << " [Value: 0x" << std::hex << ir.operands[i].imm.value.u << std::dec << "]";
-            }
-            std::cout << "\n";
-        }
         std::cout << "------------------------------------------\n";
         
         pc += ir.length;
+        vma += ir.length;
     }
 
     return 0;
