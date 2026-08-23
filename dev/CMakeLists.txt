@@ -1,7 +1,6 @@
 set(CORE_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/inc/types.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/inc/elf_loader.hpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/elf_loader.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/inc/binary_loader.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/binary_loader.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
