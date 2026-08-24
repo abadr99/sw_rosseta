@@ -10,21 +10,25 @@
  * @author a.atta
  * @date 2026-08-23
  */
+
 #include <gtest/gtest.h>
 #include <optional>
 #include <vector>
 #include "Decoder.hpp"
 #include "Instructions.hpp"
+
 namespace {
 std::optional<X86Instruction> Decode(Decoder& decoder, uint64_t vma,
                                       std::vector<uint8_t> bytes) {
   return decoder.decode(vma, bytes.data(), bytes.size());
 }
 }  // namespace
+
 class InstructionsTest : public ::testing::Test {
  protected:
   Decoder decoder;
 };
+
 TEST_F(InstructionsTest, PopulateFillsCoreIdentity) {
   auto instr = Decode(decoder, 0x400000, {0x48, 0x01, 0xC8});
   ASSERT_TRUE(instr.has_value());
