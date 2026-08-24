@@ -1,0 +1,4 @@
+# RUN: echo "48 01 D8 48 89 C1" > %t.hex
+# RUN: %rosetta %t.hex > %t.out
+# RUN: grep -i "add.*rax.*rbx" %t.out
+# RUN: grep -i "mov.*rcx.*rax" %t.out
