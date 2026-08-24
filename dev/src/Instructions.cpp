@@ -1,5 +1,6 @@
 #include "Instructions.hpp"
 
+#include <string>
 #include <utility>
 
 void X86Instruction::populate(uint64_t instruction_address,
@@ -13,11 +14,11 @@ void X86Instruction::populate(uint64_t instruction_address,
     mnemonic = z_inst.mnemonic;
     length = z_inst.length;
 
-    // 2. Metadata (Essential for routing to the right RISC-V translation logic)
+    // 2. Metadata used to route to the RISC-V translation logic.
     category = z_inst.meta.category;
     isa_set = z_inst.meta.isa_set;
     branch_type = z_inst.meta.branch_type;
-    
+
     // 3. CPU Flag Effects (Updated for Zydis v4 API)
     if (z_inst.cpu_flags) {
         flags_read = z_inst.cpu_flags->tested;
@@ -47,19 +48,19 @@ std::string X86Instruction::get_category_string() const {
 
 std::string X86Instruction::get_flags_string(uint32_t mask) const {
     if (mask == 0) return "None";
-    
+
     std::string res = "[";
     // ZYDIS_CPUFLAG_* values are masks, not bit positions.
-    if (mask & ZYDIS_CPUFLAG_CF) res += " CF"; // Carry Flag
-    if (mask & ZYDIS_CPUFLAG_PF) res += " PF"; // Parity Flag
-    if (mask & ZYDIS_CPUFLAG_AF) res += " AF"; // Adjust Flag
-    if (mask & ZYDIS_CPUFLAG_ZF) res += " ZF"; // Zero Flag
-    if (mask & ZYDIS_CPUFLAG_SF) res += " SF"; // Sign Flag
-    if (mask & ZYDIS_CPUFLAG_TF) res += " TF"; // Trap Flag
-    if (mask & ZYDIS_CPUFLAG_IF) res += " IF"; // Interrupt Flag
-    if (mask & ZYDIS_CPUFLAG_DF) res += " DF"; // Direction Flag
-    if (mask & ZYDIS_CPUFLAG_OF) res += " OF"; // Overflow Flag
+    if (mask & ZYDIS_CPUFLAG_CF) res += " CF";  // Carry Flag
+    if (mask & ZYDIS_CPUFLAG_PF) res += " PF";  // Parity Flag
+    if (mask & ZYDIS_CPUFLAG_AF) res += " AF";  // Adjust Flag
+    if (mask & ZYDIS_CPUFLAG_ZF) res += " ZF";  // Zero Flag
+    if (mask & ZYDIS_CPUFLAG_SF) res += " SF";  // Sign Flag
+    if (mask & ZYDIS_CPUFLAG_TF) res += " TF";  // Trap Flag
+    if (mask & ZYDIS_CPUFLAG_IF) res += " IF";  // Interrupt Flag
+    if (mask & ZYDIS_CPUFLAG_DF) res += " DF";  // Direction Flag
+    if (mask & ZYDIS_CPUFLAG_OF) res += " OF";  // Overflow Flag
     res += " ]";
-    
+
     return res;
 }
