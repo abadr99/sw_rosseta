@@ -18,4 +18,5 @@ Write-Host "`n--- Cleaning previous build cache ---"
 Remove-Item -Recurse -Force $buildDir -ErrorAction SilentlyContinue
 
 Write-Host "`n--- Generating Build System ---"
+
 cmake $projectRoot -B $buildDir -G "Unix Makefiles"
