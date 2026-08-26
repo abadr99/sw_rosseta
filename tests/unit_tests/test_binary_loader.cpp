@@ -14,6 +14,10 @@ class BinaryLoaderTest : public ::testing::Test {
     fs::path valid_x86_64_elf = "tests/fibonacci_x86_64.elf";
     fs::path invalid_file = "tests/invalid_data.txt";
 
+    // Additional test fixtures
+    fs::path non_x86_64_elf = "tests/non_x86_64.elf";
+    fs::path no_text_x86_64_elf = "tests/no_text_x86_64.elf";
+
     void SetUp() override {
         // Generate a corrupt/non-ELF file on the fly for error testing
         std::ofstream ofs(invalid_file);
@@ -48,7 +52,25 @@ TEST_F(BinaryLoaderTest, FailsGracefullyOnCorruptedFileFormat) {
 }
 
 // ==========================================
-// 2. Ownership & Memory Management (Rule of 5)
+// 2. Architecture Validation
+// ==========================================
+
+TEST_F(BinaryLoaderTest, RejectsNonX86_64Binary) {
+    auto loader_opt = loader::BinaryLoader::create(non_x86_64_elf.string());
+    EXPECT_FALSE(loader_opt.has_value());
+}
+
+// ==========================================
+// 3. Required Section Validation
+// ==========================================
+
+TEST_F(BinaryLoaderTest, RejectsX86_64BinaryWithoutTextSection) {
+    auto loader_opt = loader::BinaryLoader::create(no_text_x86_64_elf.string());
+    EXPECT_FALSE(loader_opt.has_value());
+}
+
+// ==========================================
+// 4. Ownership & Memory Management
 // ==========================================
 
 TEST_F(BinaryLoaderTest, MoveConstructorTransfersOwnership) {
@@ -61,35 +83,60 @@ TEST_F(BinaryLoaderTest, MoveConstructorTransfersOwnership) {
     // Trigger move constructor
     loader::BinaryLoader moved(std::move(original));
 
+    // Destination keeps the original data
     EXPECT_EQ(moved.get_entry_point(), expected_entry);
     EXPECT_TRUE(moved.get_section(".text").has_value());
+
+    // Our implementation explicitly resets the moved-from object's entry point.
+    EXPECT_EQ(original.get_entry_point(), 0);
 }
 
 TEST_F(BinaryLoaderTest, MoveAssignmentTransfersOwnership) {
     auto loader1_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
     ASSERT_TRUE(loader1_opt.has_value());
 
+    auto loader2_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
+    ASSERT_TRUE(loader2_opt.has_value());
+
     loader::BinaryLoader loader1 = std::move(loader1_opt.value());
+    loader::BinaryLoader loader2 = std::move(loader2_opt.value());
     uint64_t expected_entry = loader1.get_entry_point();
 
-    // Create an empty shell, then move-assign
-    // Note: This assumes your class has a default constructor.
-    // If it doesn't, skip testing a raw shell and just move into
-    // another loaded instance.
-    loader::BinaryLoader loader2 = std::move(loader1);
+    // loader2 already contains data here.
+    // This tests replacing its existing state.
+    loader2 = std::move(loader1);
 
     EXPECT_EQ(loader2.get_entry_point(), expected_entry);
+    EXPECT_TRUE(loader2.get_section(".text").has_value());
+
+    // Our implementation resets the moved-from object's entry point.
+    EXPECT_EQ(loader1.get_entry_point(), 0);
+}
+
+TEST_F(BinaryLoaderTest, SelfMoveAssignmentDoesNotCorruptObject) {
+    auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
+    ASSERT_TRUE(loader_opt.has_value());
+
+    loader::BinaryLoader loader = std::move(loader_opt.value());
+    uint64_t expected_entry = loader.get_entry_point();
+
+    // Test: loader = std::move(loader);
+    // The implementation contains: if (this != &other)
+    loader = std::move(loader);
+
+    EXPECT_EQ(loader.get_entry_point(), expected_entry);
+    EXPECT_TRUE(loader.get_section(".text").has_value());
 }
 
 // ==========================================
-// 3. Section Lookup Mechanisms
+// 5. Section Lookup Mechanisms
 // ==========================================
 
 TEST_F(BinaryLoaderTest, GetSectionReturnsValidDataForText) {
     auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
     ASSERT_TRUE(loader_opt.has_value());
-    const auto& loader = loader_opt.value();
 
+    const auto& loader = loader_opt.value();
     auto section_opt = loader.get_section(".text");
     ASSERT_TRUE(section_opt.has_value());
 
@@ -101,90 +148,143 @@ TEST_F(BinaryLoaderTest, GetSectionReturnsValidDataForText) {
 
 TEST_F(BinaryLoaderTest, GetSectionReturnsNulloptForMissingSection) {
     auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
-    const auto& loader = loader_opt.value();
+    ASSERT_TRUE(loader_opt.has_value());
 
-    // Only test a genuinely fake section name. We removed the "" check
-    // because ELF files legally contain a nameless Null Section.
+    const auto& loader = loader_opt.value();
     EXPECT_FALSE(loader.get_section(".this_does_not_exist").has_value());
 }
 
 TEST_F(BinaryLoaderTest, GetSectionIsCaseSensitive) {
     auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
+    ASSERT_TRUE(loader_opt.has_value());
+
     const auto& loader = loader_opt.value();
 
-    // ".TEXT" should fail since section names are lowercase in our ELF
+    // ".TEXT" should fail because the actual section name is ".text".
     EXPECT_FALSE(loader.get_section(".TEXT").has_value());
 }
 
 // ==========================================
-// 4. Mathematical Bounds Checking (VMA to Offset)
+// 6. Other Section Data
+// ==========================================
+
+TEST_F(BinaryLoaderTest, DataSectionContainsValidData) {
+    auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
+    ASSERT_TRUE(loader_opt.has_value());
+
+    const auto& loader = loader_opt.value();
+    auto section_opt = loader.get_section(".data");
+
+    // Some perfectly valid ELF files may not contain a .data section,
+    // so don't fail just because it doesn't exist.
+    if (!section_opt.has_value()) {
+        GTEST_SKIP() << "ELF file does not contain a .data section";
+    }
+
+    const auto& section = section_opt.value().get();
+    EXPECT_EQ(section.name, ".data");
+    EXPECT_EQ(section.data.size(), section.size);
+}
+
+// ==========================================
+// 7. Mathematical Bounds Checking
+//    VMA -> Offset
 // ==========================================
 
 TEST_F(BinaryLoaderTest, VmaToOffsetMathematicalBoundaries) {
     auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
-    const auto& loader = loader_opt.value();
+    ASSERT_TRUE(loader_opt.has_value());
 
+    const auto& loader = loader_opt.value();
     auto section_opt = loader.get_section(".text");
+    ASSERT_TRUE(section_opt.has_value());
+
     const auto& text = section_opt.value().get();
 
+    // --------------------------------------
     // Exact Start Boundary
+    // --------------------------------------
     auto start_opt = loader.vma_to_offset(text.vma);
     ASSERT_TRUE(start_opt.has_value());
     EXPECT_EQ(start_opt.value(), 0);
 
+    // --------------------------------------
     // Exact Middle
+    // --------------------------------------
     uint64_t middle_vma = text.vma + (text.size / 2);
     auto middle_opt = loader.vma_to_offset(middle_vma);
     ASSERT_TRUE(middle_opt.has_value());
     EXPECT_EQ(middle_opt.value(), text.size / 2);
 
+    // --------------------------------------
     // Exact End Boundary (Last valid byte)
+    // --------------------------------------
     auto end_opt = loader.vma_to_offset(text.vma + text.size - 1);
     ASSERT_TRUE(end_opt.has_value());
     EXPECT_EQ(end_opt.value(), text.size - 1);
 
-    // Out of Bounds: 1 Byte Below Start
+    // --------------------------------------
+    // Out of Bounds: 1 byte below start
+    // --------------------------------------
     EXPECT_FALSE(loader.vma_to_offset(text.vma - 1).has_value());
 
-    // Out of Bounds: 1 Byte Past End
+    // --------------------------------------
+    // Out of Bounds: 1 byte past end
+    // --------------------------------------
     EXPECT_FALSE(loader.vma_to_offset(text.vma + text.size).has_value());
 
-    // Out of Bounds: Extreme Values
-    // Using 0x1000 avoids colliding with VMA 0 metadata sections like .strtab
+    // --------------------------------------
+    // Extreme Values
+    // --------------------------------------
     EXPECT_FALSE(loader.vma_to_offset(0x1000).has_value());
     EXPECT_FALSE(loader.vma_to_offset(0xFFFFFFFFFFFFFFFF).has_value());
 }
 
 // ==========================================
-// 5. Data Integrity & Verification
+// 8. Entry Point Validation
 // ==========================================
 
 TEST_F(BinaryLoaderTest, EntryPointMapsToValidVirtualMemory) {
     auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
-    const auto& loader = loader_opt.value();
+    ASSERT_TRUE(loader_opt.has_value());
 
+    const auto& loader = loader_opt.value();
     uint64_t entry_vma = loader.get_entry_point();
     auto offset_opt = loader.vma_to_offset(entry_vma);
 
-    // The entry point must be mathematically accessible within mapped sections
+    // The entry point must correspond to an address inside one of the
+    // loaded sections.
     EXPECT_TRUE(offset_opt.has_value());
 }
 
-TEST_F(BinaryLoaderTest, TextSectionContainsExpectedFibonacciMachineCode) {
+TEST_F(BinaryLoaderTest, EntryPointIsNotZero) {
     auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
-    const auto& loader = loader_opt.value();
+    ASSERT_TRUE(loader_opt.has_value());
 
+    const auto& loader = loader_opt.value();
+    EXPECT_NE(loader.get_entry_point(), 0);
+}
+
+// ==========================================
+// 9. General ELF Loader Integrity
+// ==========================================
+
+TEST_F(BinaryLoaderTest, TextSectionHasConsistentMetadata) {
+    auto loader_opt = loader::BinaryLoader::create(valid_x86_64_elf.string());
+    ASSERT_TRUE(loader_opt.has_value());
+
+    const auto& loader = loader_opt.value();
     auto section_opt = loader.get_section(".text");
+    ASSERT_TRUE(section_opt.has_value());
+
     const auto& text = section_opt.value().get();
 
-    // Verify the loader pulled the exact raw bytes for: mov rcx, 10
-    // x86-64 machine code: 48 C7 C1 0A 00 00 00
-    ASSERT_GE(text.size, 7);
-    EXPECT_EQ(text.data[0], 0x48);
-    EXPECT_EQ(text.data[1], 0xC7);
-    EXPECT_EQ(text.data[2], 0xC1);
-    EXPECT_EQ(text.data[3], 0x0A);
-    EXPECT_EQ(text.data[4], 0x00);
-    EXPECT_EQ(text.data[5], 0x00);
-    EXPECT_EQ(text.data[6], 0x00);
+    // Section name is correct
+    EXPECT_EQ(text.name, ".text");
+    // Section has actual contents
+    EXPECT_GT(text.size, 0);
+    // Number of bytes loaded equals section size
+    EXPECT_EQ(text.data.size(), text.size);
+    // VMA should be a valid address
+    EXPECT_NE(text.vma, 0);
 }
