@@ -1,5 +1,4 @@
 set(CORE_SOURCES
-Zydis-Decoder-Integration
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Decoder.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/Instructions.cpp"
 )
