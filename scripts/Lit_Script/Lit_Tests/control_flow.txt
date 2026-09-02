@@ -1,0 +1,7 @@
+# RUN: echo ".intel_syntax noprefix; .global _start; _start: cmp rax, rbx; jne _start; ret;" > %t.s
+# RUN: gcc -nostdlib %t.s -o %t.elf
+# RUN: %rosetta %t.elf > %t.out
+# RUN: grep -i "cmp.*rax.*rbx" %t.out
+# Zydis normalizes the JNE opcode to its synonymous JNZ mnemonic.
+# RUN: grep -i "jnz" %t.out
+# RUN: grep -i "ret" %t.out

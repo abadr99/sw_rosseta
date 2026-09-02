@@ -1,0 +1,3 @@
+# RUN: echo "This is just a plain text file, not a compiled ELF binary." > %t.fake
+# RUN: not %rosetta %t.fake 2> %t.err
+# RUN: grep -i "Error: Failed to parse" %t.err

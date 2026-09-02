@@ -1,57 +1,48 @@
 #include <cstdint>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "Decoder.hpp"
+#include "binary_loader.hpp"
 
-// Helper function to read hex strings from a text file into binary bytes
-std::vector<uint8_t> load_hex_file(const std::string& filename) {
-    std::vector<uint8_t> binary;
-    std::ifstream file(filename);
-
-    if (!file.is_open()) {
-        std::cerr << "Error: Could not open file '" << filename << "'\n";
-        return binary;
-    }
-
-    std::string hex_str;
-    while (file >> hex_str) {
-        uint8_t byte = static_cast<uint8_t>(std::stoul(hex_str, nullptr, 16));
-        binary.push_back(byte);
-    }
-
-    return binary;
-}
-
-// NEW: Accept command-line arguments
 int main(int argc, char* argv[]) {
     std::cout << "--- sw_rosetta: 64-bit x86 to RISC-V Translator ---\n\n";
 
-    // If no file was provided, show usage and exit.
     if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <path_to_hex_file.txt>\n";
+        std::cerr << "Usage: " << argv[0] << " <binary.elf>\n";
         return 1;
     }
 
-    // Grab the file path from the terminal arguments
-    std::string filename = argv[1];
+    // 1. Ingest the ELF file via LIEF
+    auto loader_opt = loader::BinaryLoader::create(argv[1]);
+    if (!loader_opt) {
+        std::cerr << "Error: Failed to parse x86-64 ELF binary.\n";
+        return 1;
+    }
 
-    // Load the binary data dynamically
-    std::vector<uint8_t> x86_64_binary = load_hex_file(filename);
+    // 2. Extract the .text section containing the executable machine code
+    auto text_opt = loader_opt->get_section(".text");
+    if (!text_opt) {
+        std::cerr << "Error: No allocatable .text section found.\n";
+        return 1;
+    }
+
+    const auto& text_section = text_opt->get();
+    const std::vector<uint8_t>& x86_64_binary = text_section.data;
 
     if (x86_64_binary.empty()) {
-        std::cerr << "Hardware Fault: Memory buffer is empty or file not "
-                     "found.\n";
+        std::cerr << "Hardware Fault: .text section is empty.\n";
         return 1;
     }
 
     Decoder decoder;
-    uint64_t vma = 0x400000;
+    // 3. Initialize VMA dynamically based on the ELF layout
+    uint64_t vma = text_section.vma;
     size_t pc = 0;
 
+    // 4. Decode loop
     while (pc < x86_64_binary.size()) {
         auto result = decoder.decode(vma, &x86_64_binary[pc],
                                      x86_64_binary.size() - pc);

@@ -1,0 +1,6 @@
+# RUN: echo ".intel_syntax noprefix; .global _start; _start: push rax; pop rbx; mov rcx, 0x10;" > %t.s
+# RUN: gcc -nostdlib %t.s -o %t.elf
+# RUN: %rosetta %t.elf > %t.out
+# RUN: grep -i "push.*rax" %t.out
+# RUN: grep -i "pop.*rbx" %t.out
+# RUN: grep -i "mov.*rcx" %t.out
