@@ -13,8 +13,9 @@ target_include_directories(sw_rosseta_lib
 )
 
 target_link_libraries(sw_rosseta_lib
-    PUBLIC
+      PUBLIC
         Zydis
+        LIEF::LIEF
 )
 
 add_executable(rosetta src/main.cpp)
