@@ -31,7 +31,5 @@ std::optional<X86Instruction> Decoder::decode(
         return std::nullopt;
     }
 
-    X86Instruction decoded;
-    decoded.populate(vma, instruction, operands, formatted);
-    return decoded;
+    return X86Instruction(vma, instruction, operands, formatted);
 }
