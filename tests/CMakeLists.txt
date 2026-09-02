@@ -8,7 +8,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 set(TEST_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/test_binary_loader.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_Decoder.cpp"
 )
 
 if(TEST_SOURCES)
