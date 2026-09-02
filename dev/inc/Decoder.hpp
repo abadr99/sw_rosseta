@@ -8,10 +8,6 @@
 #include "Instructions.hpp"
 
 class Decoder {
- private:
-  ZydisDecoder z_decoder;
-  ZydisFormatter z_formatter;
-
  public:
   Decoder();
 
@@ -19,4 +15,8 @@ class Decoder {
   // Returns std::nullopt for null, incomplete, or invalid instruction bytes.
   std::optional<X86Instruction> decode(uint64_t vma, const uint8_t* buffer,
                                        size_t length);
+
+ private:
+  ZydisDecoder z_decoder;
+  ZydisFormatter z_formatter;
 };

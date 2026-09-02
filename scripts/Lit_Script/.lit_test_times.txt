@@ -1,4 +1,8 @@
-3.428309e-01 Lit_Tests/basic_decode.txt
-6.331174e-01 Lit_Tests/control_flow.txt
-3.044178e-01 Lit_Tests/error_handling.txt
-6.416607e-01 Lit_Tests/memory_ops.txt
+2.386544e-01 Lit_Tests/basic_decode.txt
+9.246676e-01 Lit_Tests/control_flow.txt
+1.994035e-01 Lit_Tests/error_handling.txt
+9.201608e-01 Lit_Tests/memory_ops.txt
+4.650998e-01 Lit_Tests/control_flow_tests.txt
+4.679081e-01 Lit_Tests/decoder_tests.txt
+4.665813e-01 Lit_Tests/fibonacci_tests.txt
+4.904747e-01 Lit_Tests/loader_tests.txt

@@ -1,2 +1,0 @@
-# RUN: %rosetta %S/../../../tests/fibonacci_x86_64.elf > %t.out
-# RUN: grep -i "mov.*rcx" %t.out

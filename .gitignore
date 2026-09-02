@@ -68,5 +68,10 @@ vcpkg_installed/
 Testing/
 .cache/
 
+# LLVM lit generates per-test scripts, temporary binaries, and timing state.
+scripts/Lit_Script/Output/
+scripts/Lit_Script/Lit_Tests/Output/
+scripts/Lit_Script/.lit_test_times.txt
+
 # vscode residue
 .vscode/
