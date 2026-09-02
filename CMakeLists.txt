@@ -17,5 +17,20 @@ FetchContent_MakeAvailable(zydis)
 
 enable_testing()
 
+include(FetchContent)
+
+set(LIEF_PYTHON_API OFF CACHE BOOL "" FORCE)
+set(LIEF_C_API OFF CACHE BOOL "" FORCE)
+set(LIEF_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(LIEF_TESTS OFF CACHE BOOL "" FORCE)
+set(LIEF_DOC OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+        LIEF
+        GIT_REPOSITORY https://github.com/lief-project/LIEF.git
+        GIT_TAG        1.0.0
+)
+FetchContent_MakeAvailable(LIEF)
+
 add_subdirectory(dev)
 add_subdirectory(tests)
