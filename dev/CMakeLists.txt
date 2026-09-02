@@ -1,17 +1,23 @@
 set(CORE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/calc.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/inc/binary_loader.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/binary_loader.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
 
 target_include_directories(sw_rosseta_lib
-    PUBLIC
+        PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
+)
+
+target_link_libraries(sw_rosseta_lib
+        PUBLIC
+        LIEF::LIEF
 )
 
 add_executable(rosetta src/main.cpp)
 
 target_link_libraries(rosetta
-    PRIVATE
+        PRIVATE
         sw_rosseta_lib
 )
