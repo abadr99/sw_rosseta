@@ -1,5 +1,5 @@
 # SW Rosetta
-- This tool is used to convert from x86 binary code to RV binary code 
+- This tool is used to convert from x86 binary code to RV binary code
 
 ## Prerequisites
 Before you begin, ensure you have the following installed:
