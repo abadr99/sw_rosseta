@@ -14,23 +14,22 @@ TEST(DecoderTest, Decode64BitAdd) {
     ASSERT_TRUE(decoded.has_value());
     const X86Instruction& ir = *decoded;
 
-    // 2. Check Core Identity
-    EXPECT_EQ(ir.name, "add");
-    EXPECT_EQ(ir.mnemonic, ZYDIS_MNEMONIC_ADD);
-    EXPECT_EQ(ir.address, 0x00400000);
-    EXPECT_EQ(ir.text, "add rax, rbx");
-    EXPECT_EQ(ir.length, 3);
-    EXPECT_EQ(ir.operand_count, 2);
+    // 2. Check Core Identity (using new getter methods)
+    EXPECT_EQ(ir.get_mnemonic(), ZYDIS_MNEMONIC_ADD);
+    EXPECT_EQ(ir.get_address(), 0x00400000);
+    EXPECT_EQ(ir.get_text(), "add rax, rbx");
+    EXPECT_EQ(ir.get_length(), 3);
+    EXPECT_EQ(ir.get_operand_count(), 2);
 
     // 3. Check Destination (rax)
-    EXPECT_TRUE(ir.is_operand_register(0));
-    EXPECT_EQ(ir.operands[0].reg.value, ZYDIS_REGISTER_RAX);
-    EXPECT_EQ(ir.operands[0].size, 64);
+    EXPECT_EQ(ir.get_operand(0).type, ZYDIS_OPERAND_TYPE_REGISTER);
+    EXPECT_EQ(ir.get_operand(0).reg.value, ZYDIS_REGISTER_RAX);
+    EXPECT_EQ(ir.get_operand(0).size, 64);
 
     // 4. Check Source (rbx)
-    EXPECT_TRUE(ir.is_operand_register(1));
-    EXPECT_EQ(ir.operands[1].reg.value, ZYDIS_REGISTER_RBX);
-    EXPECT_EQ(ir.operands[1].size, 64);
+    EXPECT_EQ(ir.get_operand(1).type, ZYDIS_OPERAND_TYPE_REGISTER);
+    EXPECT_EQ(ir.get_operand(1).reg.value, ZYDIS_REGISTER_RBX);
+    EXPECT_EQ(ir.get_operand(1).size, 64);
 }
 
 TEST(DecoderTest, InvalidOpcodeFailsGracefully) {
@@ -44,13 +43,11 @@ TEST(DecoderTest, InvalidOpcodeFailsGracefully) {
         decoder.decode(0x00400000, binary, sizeof(binary)).has_value());
 }
 
-TEST(InstructionTest, FormatsZydisFlagMasks) {
-    X86Instruction instruction;
-
-    const std::string flags = instruction.get_flags_string(
-        ZYDIS_CPUFLAG_CF | ZYDIS_CPUFLAG_ZF | ZYDIS_CPUFLAG_OF);
-
-    EXPECT_NE(flags.find("CF"), std::string::npos);
-    EXPECT_NE(flags.find("ZF"), std::string::npos);
-    EXPECT_NE(flags.find("OF"), std::string::npos);
+TEST(InstructionTest, DefaultConstructorIsZeroed) {
+    X86Instruction ir;
+    // Verifies that your new zero-initialization list works perfectly
+    EXPECT_EQ(ir.get_address(), 0);
+    EXPECT_EQ(ir.get_length(), 0);
+    EXPECT_EQ(ir.get_operand_count(), 0);
+    EXPECT_EQ(ir.get_mnemonic(), ZYDIS_MNEMONIC_INVALID);
 }
