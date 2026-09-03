@@ -9,4 +9,5 @@ $buildDir = Join-Path $projectRoot "build"
 $env:Path = "C:\msys64\ucrt64\bin;C:\msys64\usr\bin;" + $env:Path
 
 # Execute the test binary securely using its absolute path
+
 & (Join-Path $buildDir "tests\unit_tests.exe") --gtest_shuffle
