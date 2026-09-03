@@ -1,0 +1,25 @@
+name: Test Lit Only (Fast Debug)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  lit-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Lit and FileCheck
+        run: |
+          python3 -m pip install --upgrade pip
+          pip3 install lit filecheck
+
+      - name: Verify Tools in PATH
+        run: |
+          which lit
+          which FileCheck
+          FileCheck --version
+          lit --version
+
+      - name: Run LIT Dry Run / Discovery
+        run: lit -v scripts/Lit_Script --dry-run
