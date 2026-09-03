@@ -2,7 +2,8 @@
 9.246676e-01 Lit_Tests/control_flow.txt
 1.994035e-01 Lit_Tests/error_handling.txt
 9.201608e-01 Lit_Tests/memory_ops.txt
-4.650998e-01 Lit_Tests/control_flow_tests.txt
-4.679081e-01 Lit_Tests/decoder_tests.txt
-4.665813e-01 Lit_Tests/fibonacci_tests.txt
-4.904747e-01 Lit_Tests/loader_tests.txt
+3.992093e-01 Lit_Tests/control_flow_tests.txt
+4.006169e-01 Lit_Tests/decoder_tests.txt
+3.994195e-01 Lit_Tests/fibonacci_tests.txt
+4.683712e-01 Lit_Tests/loader_tests.txt
+3.995702e-01 Lit_Tests/factorial_tests.txt

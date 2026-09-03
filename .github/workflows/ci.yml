@@ -45,6 +45,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install QEMU and RISC-V Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user qemu-user-static gcc-riscv64-linux-gnu
+
       - name: Download Linux build artifact
         uses: actions/download-artifact@v4
         with:
@@ -80,6 +85,9 @@ jobs:
     needs: build-win 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install QEMU (Windows)
+        run: choco install qemu -y
 
       - name: Download Windows build artifact
         uses: actions/download-artifact@v4
