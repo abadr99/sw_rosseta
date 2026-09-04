@@ -1,5 +1,5 @@
-#ifndef UTILS_MACROS_H
-#define UTILS_MACROS_H
+#ifndef DEV_INC_UTILS_MACROS_H_
+#define DEV_INC_UTILS_MACROS_H_
 
 #include <cstdio>
 #include <cstdlib>
@@ -24,4 +24,5 @@ namespace utils {
 
 #define UNIMPLEMENTED()\
   ::rosetta::frontend::utils::Unreachable(("Unimplemented Function"), __FILE__, __LINE__)
-#endif
+
+#endif  // DEV_INC_UTILS_MACROS_H_

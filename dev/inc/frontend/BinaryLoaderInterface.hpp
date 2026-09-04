@@ -31,9 +31,9 @@ enum class Architecture : uint8_t {
 };
 
 struct LoadableSegment {
-  LoadableSegment(utils::Address va, 
-                  utils::Size siz, 
-                  const Perm& perm, 
+  LoadableSegment(utils::Address va,
+                  utils::Size siz,
+                  const Perm& perm,
                   const utils::Bytes& data)
   : VirtualAddress(va)
   , Size(siz)
@@ -47,32 +47,31 @@ struct LoadableSegment {
 };
 
 struct BinarySection {
-  public:
-    BinarySection(const std::string& name, utils::Address va, const utils::Bytes& data)
-    : Name(name)
-    , VirtualAddress(va)
-    , Data(data)
-    { /* EMPTY */ }
-    std::string Name;
-    utils::Address VirtualAddress;
-    utils::Bytes Data;
-
+ public:
+  BinarySection(const std::string& name, utils::Address va, const utils::Bytes& data)
+  : Name(name)
+  , VirtualAddress(va)
+  , Data(data)
+  { /* EMPTY */ }
+  std::string Name;
+  utils::Address VirtualAddress;
+  utils::Bytes Data;
 };
 
 // Represents a section of a binary
 // Interface for binary parsers
 class IBinaryParser {
-  public:
-    using LoadableSegments = std::vector<LoadableSegment>;
-    explicit IBinaryParser(const std::filesystem::path& filepath);
-    virtual ~IBinaryParser();
-    // returns the executable code section (.text)
-    virtual BinarySection GetExecutableCode() const = 0; 
-    virtual Architecture GetArchitecture() const = 0;
-    virtual uint64_t GetEntryPoint() const = 0;
-    virtual LoadableSegments GetLoadableSegments() const = 0;
-  protected:
-    std::filesystem::path filepath_;
+ public:
+  using LoadableSegments = std::vector<LoadableSegment>;
+  explicit IBinaryParser(const std::filesystem::path& filepath);
+  virtual ~IBinaryParser();
+  // returns the executable code section (.text)
+  virtual BinarySection GetExecutableCode() const = 0;
+  virtual Architecture GetArchitecture() const = 0;
+  virtual uint64_t GetEntryPoint() const = 0;
+  virtual LoadableSegments GetLoadableSegments() const = 0;
+ protected:
+  std::filesystem::path filepath_;
 };
 
 

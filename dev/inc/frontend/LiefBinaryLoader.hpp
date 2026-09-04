@@ -1,10 +1,12 @@
 #pragma once
 
+#include <memory>
+
 #include <LIEF/LIEF.hpp>
 #include <LIEF/ELF.hpp>
 #include <LIEF/PE.hpp>
 
-#include "BinaryLoaderInterface.hpp"
+#include "frontend/BinaryLoaderInterface.hpp"
 
 namespace rosetta {
 namespace frontend {
@@ -26,4 +28,6 @@ class LiefBinaryParser : public IBinaryParser {
   LoadableSegments GetLoadableSegmentsWindows(const LIEF::PE::Binary& pe) const;
 };
 
-}}} // namespace rosetta::frontend::loader
+}  // namespace loader
+}  // namespace frontend
+}  // namespace rosetta

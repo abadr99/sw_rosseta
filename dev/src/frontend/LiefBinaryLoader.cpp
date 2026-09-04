@@ -1,3 +1,5 @@
+#include <string>
+
 #include <LIEF/LIEF.hpp>
 #include <LIEF/ELF.hpp>
 #include <LIEF/PE.hpp>
@@ -32,7 +34,7 @@ BinarySection LiefBinaryParser::GetExecutableCodeLinux(const LIEF::ELF::Binary& 
     if (segment.virtual_size() == 0) {
       continue;  // SKIP EMPTY SEGMENTS
     }
-    utils::Address start_address =segment.virtual_address();
+    utils::Address start_address = segment.virtual_address();
     utils::Address end_address = start_address + segment.virtual_size();
     if (pBinary_->entrypoint() >= start_address && pBinary_->entrypoint() < end_address) {
       // Entry point is in this section 

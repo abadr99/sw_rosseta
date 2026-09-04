@@ -1,5 +1,5 @@
-#ifndef UTILS_TYPES_H
-#define UTILS_TYPES_H
+#ifndef DEV_INC_UTILS_TYPES_H_
+#define DEV_INC_UTILS_TYPES_H_
 
 #include <cstdint>
 #include <vector>
@@ -14,5 +14,8 @@ typedef std::vector<uint8_t> Bytes;
 
 typedef bool Flag;
 
-}}} // namespace rosetta::frontend::utils
-#endif
+}  // namespace utils
+}  // namespace frontend
+}  // namespace rosetta
+
+#endif  // DEV_INC_UTILS_TYPES_H_
