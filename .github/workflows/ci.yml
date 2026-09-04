@@ -54,6 +54,7 @@ jobs:
           name: linux-build-artifact
           path: |
             build-linux/tests/unit_tests
+            build-linux/tests/regression_driver
             build-linux/**/rosetta
           if-no-files-found: error
           retention-days: 1
@@ -122,34 +123,30 @@ jobs:
           name: linux-build-artifact
           path: build-linux/
 
-      - name: Locate Rosetta
+      - name: Locate and Setup Regression Driver
         run: |
-          echo "Searching for Rosetta..."
+          echo "Searching for regression_driver..."
 
-          ROSETTA=$(find build-linux -type f -name rosetta | head -n 1)
+          REGRESSION_DRIVER=$(find build-linux -type f -name regression_driver | head -n 1)
 
-          if [ -z "$ROSETTA" ]; then
-            echo "ERROR: Rosetta executable was not found."
+          if [ -z "$REGRESSION_DRIVER" ]; then
+            echo "ERROR: Regression driver was not found."
             echo "Artifact contents:"
             find build-linux -type f | sort
             exit 1
           fi
 
-          echo "Found Rosetta at: $ROSETTA"
+          echo "Found Regression Driver at: $REGRESSION_DRIVER"
 
-          mkdir -p build/dev
-          cp "$ROSETTA" build/dev/rosetta
-          chmod +x build/dev/rosetta
-
-      - name: Verify Rosetta
-        run: |
-          test -x build/dev/rosetta
-          ls -lh build/dev/rosetta
-          file build/dev/rosetta
+          mkdir -p build/tests
+          cp "$REGRESSION_DRIVER" build/tests/regression_driver
+          chmod +x build/tests/regression_driver
+          
+          echo "Regression driver installed at: build/tests/regression_driver"
+          ls -lh build/tests/regression_driver
 
       - name: Run LIT Regression Suite
         run: lit -v scripts/Lit_Script
-
 
   # ----------------------------- Building Windows -----------------------------
 
@@ -176,6 +173,7 @@ jobs:
           name: windows-build-artifact
           path: |
             build/tests/unit_tests.exe
+            build/tests/regression_driver.exe
             build/**/rosetta.exe
           if-no-files-found: error
           retention-days: 1
