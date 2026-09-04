@@ -65,8 +65,8 @@ constexpr uint64_t kEntryPoint = 0x1040;
 constexpr uint64_t kRxVirtAddr = 0x1000;
 constexpr uint64_t kRxFileSize = 0x159;
 constexpr uint8_t kRxFirstBytes[] = {0xF3, 0x0F, 0x1E, 0xFA};  // .init: endbr64
-constexpr uint8_t kEntryBytes[] = {
-    0xF3, 0x0F, 0x1E, 0xFA, 0x31, 0xED};  // _start: endbr64; xor ebp, ebp
+// _start: endbr64; xor ebp, ebp
+constexpr uint8_t kEntryBytes[] = {0xF3, 0x0F, 0x1E, 0xFA, 0x31, 0xED};  
 
 fs::path MainElf() { 
   // Get this file's directory
