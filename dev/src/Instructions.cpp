@@ -4,7 +4,7 @@
 #include <string>
 #include <utility>
 
-using namespace rosetta::frontend::decode;
+using rosetta::frontend::decode::X86Instruction;
 
 X86Instruction::X86Instruction()
     : address(0),

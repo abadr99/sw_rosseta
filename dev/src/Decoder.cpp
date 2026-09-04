@@ -1,6 +1,7 @@
 #include "Decoder.hpp"
 
-using namespace rosetta::frontend::decode;
+using rosetta::frontend::decode::Decoder;
+using rosetta::frontend::decode::X86Instruction;
 
 Decoder::Decoder() {
     // Decode 64-bit x86 instructions and render them in Intel syntax.

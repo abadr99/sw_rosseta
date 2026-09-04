@@ -20,7 +20,8 @@
 
 #include <LIEF/LIEF.hpp>
 
-using namespace rosetta::frontend::loader;
+using rosetta::frontend::loader::BinaryLoader;
+using rosetta::frontend::loader::Section;
 
 std::optional<BinaryLoader>
 BinaryLoader::create(const std::filesystem::path& filepath) noexcept {
