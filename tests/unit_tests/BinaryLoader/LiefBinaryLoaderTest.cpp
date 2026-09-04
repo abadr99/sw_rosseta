@@ -1,8 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <string>
 
 #include "frontend/BinaryLoaderInterface.hpp"
@@ -14,8 +16,6 @@ namespace {
 
 namespace fs = std::filesystem;
 
-// Compiles a tiny x86-64 ELF at test time so no binary is checked in.
-// Returns the path, or an empty path if the compiler is unavailable.
 fs::path MakeX86Elf() {
   const fs::path dir = fs::temp_directory_path() / "rosetta_loader_test";
   std::error_code ec;
@@ -40,7 +40,6 @@ fs::path MakeX86Elf() {
   return out;
 }
 
-// Writes a file that is not a valid ELF/PE.
 fs::path MakeGarbageFile() {
   const fs::path dir = fs::temp_directory_path() / "rosetta_loader_test";
   std::error_code ec;
@@ -54,16 +53,33 @@ fs::path MakeGarbageFile() {
   return out;
 }
 
-}  // namespace
+// Golden values from `readelf -h -l tests/unit_tests/BinaryLoader/main.elf`
+//
+//   Machine:             Advanced Micro Devices X86-64
+//   Entry point address: 0x1040
+//
+//   LOAD  VirtAddr=0x1000  FileSiz=0x159  MemSiz=0x159  Flags=R E
+//         maps sections: .init .plt .plt.got .text .fini
+//   .text Address=0x1040  Size=0x109
+constexpr uint64_t kEntryPoint = 0x1040;
+constexpr uint64_t kRxVirtAddr = 0x1000;
+constexpr uint64_t kRxFileSize = 0x159;
+constexpr uint8_t kRxFirstBytes[] = {0xF3, 0x0F, 0x1E, 0xFA};  // .init: endbr64
+constexpr uint8_t kEntryBytes[] = {
+    0xF3, 0x0F, 0x1E, 0xFA, 0x31, 0xED};  // _start: endbr64; xor ebp, ebp
 
-// ---------------------------------------------------------------------------
-// Parse failure
-// ---------------------------------------------------------------------------
+fs::path MainElf() { 
+  // Get this file's directory
+  const fs::path this_file_dir = fs::path(__FILE__).parent_path();
+  // Join this file's directory with "main.elf"
+  const fs::path main_elf_path = this_file_dir / "main.elf"; 
+  return main_elf_path; 
+}
+
+}  // namespace
 
 TEST(LiefBinaryLoaderTest, MissingFileLeavesParserEmpty) {
   LiefBinaryParser parser("/no/such/binary");
-  // The constructor does not throw; every query must handle a null binary.
-  // GetArchitecture is the only method that is safe to call unconditionally.
   EXPECT_EQ(parser.GetArchitecture(), Architecture::kUnknown);
 }
 
@@ -74,10 +90,6 @@ TEST(LiefBinaryLoaderTest, GarbageFileIsNotX86) {
   EXPECT_EQ(parser.GetArchitecture(), Architecture::kUnknown);
 }
 
-// ---------------------------------------------------------------------------
-// Architecture detection
-// ---------------------------------------------------------------------------
-
 TEST(LiefBinaryLoaderTest, DetectsX86_64) {
   const fs::path elf = MakeX86Elf();
   ASSERT_FALSE(elf.empty()) << "gcc not available; skipping";
@@ -85,20 +97,12 @@ TEST(LiefBinaryLoaderTest, DetectsX86_64) {
   EXPECT_EQ(parser.GetArchitecture(), Architecture::kX86_64);
 }
 
-// ---------------------------------------------------------------------------
-// Entry point
-// ---------------------------------------------------------------------------
-
 TEST(LiefBinaryLoaderTest, EntryPointIsNonZero) {
   const fs::path elf = MakeX86Elf();
   ASSERT_FALSE(elf.empty()) << "gcc not available; skipping";
   LiefBinaryParser parser(elf);
   EXPECT_NE(parser.GetEntryPoint(), 0);
 }
-
-// ---------------------------------------------------------------------------
-// Executable code
-// ---------------------------------------------------------------------------
 
 TEST(LiefBinaryLoaderTest, ExecutableCodeContainsEntryPoint) {
   const fs::path elf = MakeX86Elf();
@@ -108,7 +112,6 @@ TEST(LiefBinaryLoaderTest, ExecutableCodeContainsEntryPoint) {
   const BinarySection code = parser.GetExecutableCode();
   const uint64_t entry = parser.GetEntryPoint();
 
-  // The returned region must contain the entry point.
   EXPECT_GE(entry, code.VirtualAddress);
   EXPECT_LT(entry, code.VirtualAddress + code.Data.size());
 }
@@ -131,24 +134,64 @@ TEST(LiefBinaryLoaderTest, ExecutableCodeStartsWithEndbr64) {
   const BinarySection code = parser.GetExecutableCode();
   ASSERT_GE(code.Data.size(), 4);
 
-  // Modern GCC emits endbr64 (f3 0f 1e fa) at the start of the code segment.
   EXPECT_EQ(code.Data[0], 0xF3);
   EXPECT_EQ(code.Data[1], 0x0F);
   EXPECT_EQ(code.Data[2], 0x1E);
   EXPECT_EQ(code.Data[3], 0xFA);
 }
 
-// ---------------------------------------------------------------------------
-// Loadable segments (not yet implemented — expect empty)
-// ---------------------------------------------------------------------------
-
 TEST(LiefBinaryLoaderTest, LoadableSegmentsNotYetImplemented) {
   const fs::path elf = MakeX86Elf();
   ASSERT_FALSE(elf.empty()) << "gcc not available; skipping";
   LiefBinaryParser parser(elf);
 
-  // GetLoadableSegments is currently UNIMPLEMENTED() and aborts.
-  // When it is implemented, replace this with a test that expects
-  // the real segment list (4 PT_LOAD segments for a typical PIE binary).
   EXPECT_DEATH(parser.GetLoadableSegments(), "Unimplemented Function");
+}
+
+class MainElfTest : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    ASSERT_TRUE(fs::exists(MainElf())) << "missing fixture " << MainElf();
+    parser_ = std::make_unique<LiefBinaryParser>(MainElf());
+  }
+
+  std::unique_ptr<LiefBinaryParser> parser_;
+};
+
+TEST_F(MainElfTest, ArchitectureMatchesReadelfX86_64) {
+  EXPECT_EQ(parser_->GetArchitecture(), Architecture::kX86_64);
+}
+
+TEST_F(MainElfTest, EntryPointMatchesReadelf) {
+  EXPECT_EQ(parser_->GetEntryPoint(), kEntryPoint);
+}
+
+TEST_F(MainElfTest, ExecutableCodeIsTheRxLoadSegment) {
+  const BinarySection code = parser_->GetExecutableCode();
+
+  EXPECT_EQ(code.VirtualAddress, kRxVirtAddr);
+  EXPECT_EQ(code.Data.size(), kRxFileSize);
+}
+
+TEST_F(MainElfTest, ExecutableSegmentContainsReadelfEntry) {
+  const BinarySection code = parser_->GetExecutableCode();
+  EXPECT_GE(kEntryPoint, code.VirtualAddress);
+  EXPECT_LT(kEntryPoint, code.VirtualAddress + code.Data.size());
+}
+
+TEST_F(MainElfTest, RxSegmentStartsWithInitEndbr64) {
+  const BinarySection code = parser_->GetExecutableCode();
+  ASSERT_GE(code.Data.size(), sizeof(kRxFirstBytes));
+  for (size_t i = 0; i < sizeof(kRxFirstBytes); ++i) {
+    EXPECT_EQ(code.Data[i], kRxFirstBytes[i]) << "byte " << i;
+  }
+}
+
+TEST_F(MainElfTest, BytesAtEntryMatchReadelfText) {
+  const BinarySection code = parser_->GetExecutableCode();
+  const uint64_t off = kEntryPoint - kRxVirtAddr;
+  ASSERT_GE(code.Data.size(), off + sizeof(kEntryBytes));
+  for (size_t i = 0; i < sizeof(kEntryBytes); ++i) {
+    EXPECT_EQ(code.Data[off + i], kEntryBytes[i]) << "byte " << i;
+  }
 }
