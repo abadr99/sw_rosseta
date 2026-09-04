@@ -200,12 +200,11 @@ jobs:
       - name: Run Google Tests (Windows)
         run: .\scripts\github\windows\test.ps1
 
-
   # ----------------------------- LIT Regression Windows -----------------------------
 
   regression-tests-win:
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     needs: test-win
 
     steps:
@@ -216,32 +215,87 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Install LLVM and Lit
+      - name: Install Lit
         shell: powershell
         run: |
-          choco install llvm -y
+          $ErrorActionPreference = "Stop"
           python -m pip install lit
+
+      - name: Install LLVM and Clang
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Write-Host "Installing LLVM via Chocolatey..."
+          choco install llvm --version=17.0.6 -y --no-progress
+
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "LLVM installation failed."
+            exit $LASTEXITCODE
+          }
+
+          $fileCheck = "C:\Program Files\LLVM\bin\FileCheck.exe"
+
+          if (-not (Test-Path $fileCheck)) {
+            Write-Host "FileCheck not found at expected location."
+            Write-Host "Searching for FileCheck.exe..."
+
+            $found = Get-ChildItem `
+              -Path "C:\Program Files" `
+              -Filter "FileCheck.exe" `
+              -Recurse `
+              -ErrorAction SilentlyContinue |
+              Select-Object -First 1
+
+            if (-not $found) {
+              Write-Error "FileCheck.exe was not found."
+              exit 1
+            }
+
+            $fileCheck = $found.FullName
+          }
+
+          Write-Host "FileCheck found at:"
+          Write-Host $fileCheck
 
       - name: Add LLVM to PATH
         shell: powershell
         run: |
-          # Find LLVM installation directory dynamically
-          $llvmPath = Get-ChildItem -Path "C:\Program Files" -Filter "LLVM*" -Directory | Select-Object -First 1
-          
-          if ($llvmPath) {
-            $binPath = Join-Path $llvmPath.FullName "bin"
-            Write-Host "Found LLVM at: $binPath"
-            Add-Content -Path $env:GITHUB_PATH -Value $binPath
-          } else {
-            Write-Error "LLVM installation not found in C:\Program Files"
+          $ErrorActionPreference = "Stop"
+
+          $llvmBin = "C:\Program Files\LLVM\bin"
+
+          if (-not (Test-Path "$llvmBin\FileCheck.exe")) {
+            Write-Error "LLVM bin directory does not contain FileCheck.exe."
             exit 1
           }
+
+          Write-Host "Adding LLVM to PATH:"
+          Write-Host $llvmBin
+
+          Add-Content -Path $env:GITHUB_PATH -Value $llvmBin
+
+          # Make available in this step as well.
+          $env:Path = "$llvmBin;$env:Path"
 
       - name: Verify LIT and FileCheck
         shell: powershell
         run: |
-          lit --version
+          $ErrorActionPreference = "Stop"
+
+          Write-Host "=== Verifying installations ==="
+
+          Write-Host "`n1. FileCheck location:"
+          Get-Command FileCheck -ErrorAction Stop |
+            Select-Object Source
+
+          Write-Host "`n2. FileCheck version:"
           FileCheck --version
+
+          Write-Host "`n3. Lit version:"
+          lit --version
+
+          Write-Host "`nAll tools verified successfully!"
 
       - name: Download Windows build artifact
         uses: actions/download-artifact@v4
@@ -252,11 +306,17 @@ jobs:
       - name: Locate Rosetta
         shell: powershell
         run: |
+          $ErrorActionPreference = "Stop"
+
           Write-Host "Searching for Rosetta..."
 
-          $rosetta = Get-ChildItem -Path build -Recurse -File |
+          $rosetta = Get-ChildItem `
+            -Path build `
+            -Recurse `
+            -File `
+            -ErrorAction SilentlyContinue |
             Where-Object {
-              $_.Name -eq "rosetta.exe" -or $_.Name -eq "rosetta"
+              $_.Name -eq "rosetta.exe"
             } |
             Select-Object -First 1
 
@@ -269,10 +329,14 @@ jobs:
             exit 1
           }
 
-          Write-Host "Found Rosetta at:"
+          Write-Host "Found Rosetta:"
           Write-Host $rosetta.FullName
 
-          New-Item -ItemType Directory -Force -Path "build/dev" | Out-Null
+          New-Item `
+            -ItemType Directory `
+            -Force `
+            -Path "build/dev" |
+            Out-Null
 
           Copy-Item `
             -Path $rosetta.FullName `
@@ -282,6 +346,8 @@ jobs:
       - name: Verify Rosetta
         shell: powershell
         run: |
+          $ErrorActionPreference = "Stop"
+
           if (-not (Test-Path "build/dev/rosetta.exe")) {
             Write-Error "build/dev/rosetta.exe does not exist."
             exit 1
@@ -292,4 +358,5 @@ jobs:
       - name: Run LIT Regression Suite
         shell: powershell
         run: |
+          $ErrorActionPreference = "Stop"
           lit -v scripts/Lit_Script
