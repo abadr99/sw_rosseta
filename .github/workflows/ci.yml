@@ -25,6 +25,7 @@ jobs:
 # ----------------------------- Building Linux -----------------------------
   build-linux:
     runs-on: ubuntu-latest
+    needs: lint
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +52,7 @@ jobs:
 # ----------------------------- Building Windows -----------------------------
   build-win:
     runs-on: windows-latest
+    needs: lint
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -104,7 +106,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-test-binary
-          path: build/
+          path: build/tests/
 
       - name: Run Google Tests (Windows)
         run: .\scripts\github\windows\test.ps1
