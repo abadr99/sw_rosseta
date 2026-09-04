@@ -5,6 +5,10 @@
 #include <stdexcept>
 #include <string>
 
+namespace rosetta {
+namespace frontend {
+namespace decode {
+
 class X86Instruction {
  public:
   X86Instruction();
@@ -39,3 +43,7 @@ class X86Instruction {
   uint8_t operand_count;
   ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
 };
+
+}  // namespace decode
+}  // namespace frontend
+}  // namespace rosetta

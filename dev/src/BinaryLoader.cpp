@@ -1,5 +1,5 @@
 /**
- * @file binary_loader.cpp
+ * @file BinaryLoader.cpp
  * @brief Implementation of BinaryLoader.
  *
  * Parses the input file with LIEF's format-agnostic parser, verifies the
@@ -11,7 +11,7 @@
  * @date 2026-08-20
  */
 
-#include "binary_loader.hpp"
+#include "BinaryLoader.hpp"
 
 #include <string>
 #include <memory>
@@ -20,7 +20,7 @@
 
 #include <LIEF/LIEF.hpp>
 
-namespace loader {
+using namespace rosetta::frontend::loader;
 
 std::optional<BinaryLoader>
 BinaryLoader::create(const std::filesystem::path& filepath) noexcept {
@@ -102,5 +102,3 @@ BinaryLoader::vma_to_offset(uint64_t vma) const noexcept {
   }
   return std::nullopt;
 }
-
-}  // namespace loader

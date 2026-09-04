@@ -4,6 +4,8 @@
 #include <string>
 #include <utility>
 
+using namespace rosetta::frontend::decode;
+
 X86Instruction::X86Instruction()
     : address(0),
       mnemonic(ZYDIS_MNEMONIC_INVALID),

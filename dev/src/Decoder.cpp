@@ -1,5 +1,7 @@
 #include "Decoder.hpp"
 
+using namespace rosetta::frontend::decode;
+
 Decoder::Decoder() {
     // Decode 64-bit x86 instructions and render them in Intel syntax.
     ZydisDecoderInit(&z_decoder, ZYDIS_MACHINE_MODE_LONG_64,
