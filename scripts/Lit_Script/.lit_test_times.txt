@@ -1,4 +1,0 @@
-5.788636e-01 control_flow_tests.ll
-7.162571e-01 decoder_tests.ll
-5.773122e-01 fibonacci_tests.ll
-6.105077e-01 loader_tests.ll
