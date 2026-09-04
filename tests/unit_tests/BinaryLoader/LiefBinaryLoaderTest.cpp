@@ -15,7 +15,6 @@ using namespace rosetta::frontend::loader;  // NOLINT
 namespace {
 
 namespace fs = std::filesystem;
-
 fs::path MakeX86Elf() {
   const fs::path dir = fs::temp_directory_path() / "rosetta_loader_test";
   std::error_code ec;
@@ -23,17 +22,17 @@ fs::path MakeX86Elf() {
   if (ec) {
     return {};
   }
-
+  
   const fs::path src = dir / "main.c";
   const fs::path out = dir / "x86_64_elf";
-
+  
   {
     std::ofstream f(src);
     f << "int main(void) { return 42; }\n";
   }
-
+  
   const std::string cmd =
-      "gcc -o " + out.string() + " " + src.string() + " 2>/dev/null";
+  "gcc -o " + out.string() + " " + src.string() + " 2>/dev/null";
   if (std::system(cmd.c_str()) != 0 || !fs::exists(out)) {
     return {};
   }
@@ -78,6 +77,8 @@ fs::path MainElf() {
 
 }  // namespace
 
+// Run only on Linux as we are using gcc to compile the test input executable
+#ifdef __linux__
 TEST(LiefBinaryLoaderTest, MissingFileLeavesParserEmpty) {
   LiefBinaryParser parser("/no/such/binary");
   EXPECT_EQ(parser.GetArchitecture(), Architecture::kUnknown);
@@ -147,7 +148,7 @@ TEST(LiefBinaryLoaderTest, LoadableSegmentsNotYetImplemented) {
 
   EXPECT_DEATH(parser.GetLoadableSegments(), "Unimplemented Function");
 }
-
+#endif
 class MainElfTest : public ::testing::Test {
  protected:
   void SetUp() override {
