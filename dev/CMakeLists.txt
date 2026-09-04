@@ -7,19 +7,26 @@ set(CORE_SOURCES
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
 
 target_include_directories(sw_rosseta_lib
-        PUBLIC
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/inc
 )
 
 target_link_libraries(sw_rosseta_lib
-      PUBLIC
+    PUBLIC
         Zydis
         LIEF::LIEF
 )
 
+# --- Windows CI Fix ---
+# LIEF's cryptography parser requires the Windows Socket API
+if(WIN32)
+    target_link_libraries(sw_rosseta_lib PUBLIC ws2_32)
+endif()
+# ----------------------
+
 add_executable(rosetta src/main.cpp)
 
 target_link_libraries(rosetta
-        PRIVATE
+    PRIVATE
         sw_rosseta_lib
 )
