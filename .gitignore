@@ -79,5 +79,5 @@ scripts/Lit_Script/.lit_test_times.txt
 !.vscode/launch.json
 !.vscode/c_cpp_properties.json
 !.vscode/extensions.json
-scripts/Lit_Script/**/Output/
-.lit_test_times.txt
+tests/Regression_Tests/Output/
+tests/Regression_Tests/.lit_test_times.txt

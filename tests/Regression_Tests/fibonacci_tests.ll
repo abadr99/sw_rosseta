@@ -1,5 +1,5 @@
-# RUN: gcc -nostdlib -Wl,--build-id=none %S/../../../tests/fibonacci.s -o %t.elf
-# RUN: %rosetta %t.elf | FileCheck %s
+# RUN: gcc -nostdlib -Wl,--build-id=none %S/../fibonacci.s -o %t.elf
+# RUN: %regression_driver %t.elf | FileCheck %s
 
 # End-to-end regression test using the external Fibonacci x86-64
 # assembly program.

@@ -24,3 +24,12 @@ if(TEST_SOURCES)
     include(GoogleTest)
     gtest_discover_tests(unit_tests)
 endif()
+
+add_executable(regression_driver
+        Regression_Tests/regression_driver.cpp
+)
+
+target_link_libraries(regression_driver
+        PRIVATE
+        sw_rosseta_lib
+)

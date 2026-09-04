@@ -35,7 +35,7 @@
 # RUN: '  ret' \
 # RUN: > %t.s
 # RUN: gcc -nostdlib -Wl,--build-id=none %t.s -o %t.elf
-# RUN: %rosetta %t.elf | FileCheck %s
+# RUN: %regression_driver %t.elf | FileCheck %s
 
 # Control-flow regression.
 
