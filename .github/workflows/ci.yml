@@ -195,7 +195,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-build-artifact
-          path: build/tests/
+          path: build/
 
       - name: Run Google Tests (Windows)
         run: .\scripts\github\windows\test.ps1

@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "Decoder.hpp"
-#include "binaryloader.hpp"
+#include "BinaryLoader.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
