@@ -1,4 +1,4 @@
-#include "Decoder.hpp"
+#include "frontend/Decoder.hpp"
 
 using rosetta::frontend::decode::Decoder;
 using rosetta::frontend::decode::X86Instruction;
