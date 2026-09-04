@@ -17,6 +17,11 @@ target_link_libraries(sw_rosseta_lib
         LIEF::LIEF
 )
 
+# LIEF's cryptography parser requires the Windows Socket API
+if(WIN32)
+    target_link_libraries(sw_rosseta_lib PUBLIC ws2_32)
+endif()
+
 add_executable(rosetta src/main.cpp)
 
 target_link_libraries(rosetta

@@ -2,30 +2,38 @@ name: CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
   workflow_dispatch:
-# a new push on the same branch cancels the in-flight run.
+
+# A new push on the same branch cancels the in-flight run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-# ----------------------------- Linting -----------------------------
+
+  # ----------------------------- Linting -----------------------------
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 3
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Run Linter
         run: bash ./scripts/github/linux/lint.sh
 
-# ----------------------------- Building Linux -----------------------------
+
+  # ----------------------------- Building Linux -----------------------------
+
   build-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    needs: lint
+
     steps:
       - uses: actions/checkout@v4
 
@@ -40,18 +48,113 @@ jobs:
       - name: Build (Linux)
         run: bash ./scripts/github/linux/build.sh
 
-      - name: Upload Linux test binary
+      - name: Upload Linux build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-test-binary
-          path: build-linux/tests/unit_tests
+          name: linux-build-artifact
+          path: |
+            build-linux/tests/unit_tests
+            build-linux/tests/regression_driver
+            build-linux/**/rosetta
           if-no-files-found: error
           retention-days: 1
 
-# ----------------------------- Building Windows -----------------------------
+
+  # ----------------------------- Testing Linux -----------------------------
+
+  test-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build-linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux test binary
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build-artifact
+          path: build-linux/
+
+      - name: Configure Test Environment (Linux)
+        run: bash ./scripts/github/linux/config_test.sh
+
+      - name: Run Google Tests (Linux)
+        run: bash ./scripts/github/linux/test.sh
+
+
+  # ----------------------------- LIT Regression Linux -----------------------------
+
+  regression-tests-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: test-linux
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM, Lit and GCC
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y llvm gcc python3-pip
+          python3 -m pip install --user lit
+
+      - name: Add LLVM tools to PATH
+        run: |
+          FILECHECK=$(find /usr/lib/llvm-* -type f -name FileCheck 2>/dev/null | head -n 1)
+
+          if [ -z "$FILECHECK" ]; then
+            echo "ERROR: FileCheck not found"
+            exit 1
+          fi
+
+          echo "Found FileCheck: $FILECHECK"
+          echo "$(dirname "$FILECHECK")" >> "$GITHUB_PATH"
+
+      - name: Verify LIT and FileCheck
+        run: |
+          lit --version
+          FileCheck --version
+          gcc --version
+
+      - name: Download Linux build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-build-artifact
+          path: build-linux/
+
+      - name: Locate and Setup Regression Driver
+        run: |
+          echo "Searching for regression_driver..."
+
+          REGRESSION_DRIVER=$(find build-linux -type f -name regression_driver | head -n 1)
+
+          if [ -z "$REGRESSION_DRIVER" ]; then
+            echo "ERROR: Regression driver was not found."
+            echo "Artifact contents:"
+            find build-linux -type f | sort
+            exit 1
+          fi
+
+          echo "Found Regression Driver at: $REGRESSION_DRIVER"
+
+          mkdir -p build/tests
+          cp "$REGRESSION_DRIVER" build/tests/regression_driver
+          chmod +x build/tests/regression_driver
+          
+          echo "Regression driver installed at: build/tests/regression_driver"
+          ls -lh build/tests/regression_driver
+
+      - name: Run LIT Regression Suite
+        run: lit -v scripts/Lit_Script
+
+  # ----------------------------- Building Windows -----------------------------
+
   build-win:
     runs-on: windows-latest
     timeout-minutes: 20
+    needs: lint
+
     steps:
       - uses: actions/checkout@v4
 
@@ -64,47 +167,33 @@ jobs:
       - name: Build (Windows)
         run: .\scripts\github\windows\build.ps1
 
-      - name: Upload Windows test binary
+      - name: Upload Windows build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-test-binary
-          path: build/tests/unit_tests.exe
+          name: windows-build-artifact
+          path: |
+            build/tests/unit_tests.exe
+            build/tests/regression_driver.exe
+            build/**/rosetta.exe
           if-no-files-found: error
           retention-days: 1
 
-# ----------------------------- Testing Linux -----------------------------
-  test-linux:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: build-linux
-    steps:
-      - uses: actions/checkout@v4
 
-      - name: Download Linux test binary
-        uses: actions/download-artifact@v4
-        with:
-          name: linux-test-binary
-          path: build-linux/tests/
+  # ----------------------------- Testing Windows -----------------------------
 
-      - name: Configure Test Environment (Linux)
-        run: bash ./scripts/github/linux/config_test.sh
-
-      - name: Run Google Tests (Linux)
-        run: bash ./scripts/github/linux/test.sh
-
-# ----------------------------- Testing Windows -----------------------------
   test-win:
     runs-on: windows-latest
     timeout-minutes: 10
     needs: build-win
+
     steps:
       - uses: actions/checkout@v4
 
       - name: Download Windows test binary
         uses: actions/download-artifact@v4
         with:
-          name: windows-test-binary
-          path: build/tests/
+          name: windows-build-artifact
+          path: build/
 
       - name: Run Google Tests (Windows)
         run: .\scripts\github\windows\test.ps1
