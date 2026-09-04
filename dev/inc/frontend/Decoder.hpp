@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <optional>
 
-#include "Instructions.hpp"
+#include "frontend/Instruction.hpp"
 
 namespace rosetta {
 namespace frontend {
