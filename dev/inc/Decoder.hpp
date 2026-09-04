@@ -7,6 +7,10 @@
 
 #include "Instructions.hpp"
 
+namespace rosetta {
+namespace frontend {
+namespace decode {
+
 class Decoder {
  public:
   Decoder();
@@ -20,3 +24,7 @@ class Decoder {
   ZydisDecoder z_decoder;
   ZydisFormatter z_formatter;
 };
+
+}  // namespace decode
+}  // namespace frontend
+}  // namespace rosetta

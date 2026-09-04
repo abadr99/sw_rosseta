@@ -1,5 +1,5 @@
 /**
- * @file binary_loader.hpp
+ * @file BinaryLoader.hpp
  * @brief Loads and parses x86-64 binaries (ELF, PE) via LIEF.
  *
  * Provides BinaryLoader, a non-throwing wrapper around LIEF's abstract
@@ -20,6 +20,8 @@
 #include <optional>
 #include <functional>
 
+namespace rosetta {
+namespace frontend {
 namespace loader {
 
 /**
@@ -95,3 +97,5 @@ class BinaryLoader {
 };
 
 }  // namespace loader
+}  // namespace frontend
+}  // namespace rosetta
