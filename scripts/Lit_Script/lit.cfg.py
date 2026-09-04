@@ -3,7 +3,7 @@ import lit.formats
 
 config.name = 'sw_rosetta_lit'
 config.test_format = lit.formats.ShTest(force_execute_external=True)
-config.suffixes = ['.txt']
+config.suffixes = ['.ll']
 
 # Navigate from Lit_Script up to the project root, then into the build directory
 project_root = os.path.dirname(

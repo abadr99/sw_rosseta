@@ -73,7 +73,11 @@ scripts/Lit_Script/Output/
 scripts/Lit_Script/Lit_Tests/Output/
 scripts/Lit_Script/.lit_test_times.txt
 
-# vscode residue
-.vscode/
+# vscode residue — keep shared tasks / debug config
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/c_cpp_properties.json
+!.vscode/extensions.json
 scripts/Lit_Script/**/Output/
 .lit_test_times.txt

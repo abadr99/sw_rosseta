@@ -4,6 +4,9 @@
 #include "Decoder.hpp"
 #include "Instructions.hpp"
 
+using rosetta::frontend::decode::Decoder;
+using rosetta::frontend::decode::X86Instruction;
+
 TEST(DecoderTest, Decode64BitAdd) {
     Decoder decoder;
     // 64-bit: add rax, rbx (0x48 is the REX.W prefix)

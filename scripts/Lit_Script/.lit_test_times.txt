@@ -6,3 +6,7 @@
 4.679081e-01 Lit_Tests/decoder_tests.txt
 4.665813e-01 Lit_Tests/fibonacci_tests.txt
 4.904747e-01 Lit_Tests/loader_tests.txt
+5.598350e-01 Lit_Tests/control_flow_tests.ll
+6.696873e-01 Lit_Tests/decoder_tests.ll
+5.583568e-01 Lit_Tests/fibonacci_tests.ll
+5.871384e-01 Lit_Tests/loader_tests.ll
