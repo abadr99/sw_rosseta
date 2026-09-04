@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <iostream>
 
-#include "BinaryLoader.hpp"
-#include "Decoder.hpp"
+#include "frontend/BinaryLoader.hpp"
+#include "frontend/Decoder.hpp"
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
