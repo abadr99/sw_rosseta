@@ -1,105 +1,74 @@
 /**
  * @file BinaryLoader.cpp
  * @brief Implementation of BinaryLoader.
- *
- * Parses the input file with LIEF's format-agnostic parser, verifies the
- * target is 64-bit x86-64 (checking the ELF- or PE-specific machine field
- * depending on binary->format()), then copies the entry point and every
- * allocatable section into host memory.
- *
- * @author a.atta
- * @date 2026-08-20
  */
 
+ #include <LIEF/LIEF.hpp>
+ 
+#include "utils/Macros.h"
+#include "utils/Types.h"
 #include "BinaryLoader.hpp"
 
-#include <string>
-#include <memory>
-#include <vector>
-#include <utility>
+using namespace rosetta::frontend;  // NOLINT
+using namespace rosetta::frontend::loader;  // NOLINT
 
-#include <LIEF/LIEF.hpp>
+// ------------------- BinarySection Implementation -------------------
+BinarySection::BinarySection(const std::string& name, 
+                             const utils::Address virtual_address, 
+                             const utils::Bytes& data)
+  : name_(name)
+  , virtual_address_(virtual_address)
+  , data_(data) 
+  { /* EMPTY */}
 
-using rosetta::frontend::loader::BinaryLoader;
-using rosetta::frontend::loader::Section;
+std::string BinarySection::GetName() const { 
+  return name_; 
+}
+utils::Address BinarySection::GetVirtualAddress() const { 
+  return virtual_address_; 
+}
+utils::Bytes BinarySection::GetContent() const { 
+  return data_; 
+}
 
-std::optional<BinaryLoader>
-BinaryLoader::create(const std::filesystem::path& filepath) noexcept {
-  std::error_code ec;
-  if (!std::filesystem::exists(filepath, ec) || ec) {
-    return std::nullopt;
-  }
+// ------------------- IBinaryParser Implementation -------------------
+IBinaryParser::IBinaryParser(const std::filesystem::path& filepath)
+  : filepath_(filepath) {
+}
 
-  std::unique_ptr<LIEF::Binary> binary = LIEF::Parser::parse(filepath.string());
-  if (binary == nullptr) {
-    return std::nullopt;
-  }
+IBinaryParser::~IBinaryParser() = default;
 
-  if (binary->header().architecture() != LIEF::Header::ARCHITECTURES::X86_64) {
-    return std::nullopt;
-  }
+// ------------------- LiefBinaryParser Implementation -------------------
+LiefBinaryParser::LiefBinaryParser(const std::filesystem::path& filepath)
+  : IBinaryParser(filepath)
+  , pBinary_(LIEF::Parser::parse(filepath_.string())) {
+}
 
-  BinaryLoader loader;
-  loader.entry_point_ = binary->entrypoint();
-
-  for (const LIEF::Section& section : binary->sections()) {
-    const auto& content = section.content();
-    loader.sections_.push_back(Section{
-        section.name(),
-        section.virtual_address(),
-        section.size(),
-        std::vector<uint8_t>(content.begin(), content.end()),
-    });
-  }
-
-  bool has_text = false;
-  for (const auto& section : loader.sections_) {
-    if (section.name == ".text") {
-      has_text = true;
-      break;
+BinarySection LiefBinaryParser::GetExecutableCode() const {
+  using section = LIEF::Section;
+  for (const auto& section : pBinary_->sections()) {
+    // todo(@abadr99): we are assuming the the section that contains 
+    // the executable code is named ".text"
+    if (section.name() == ".text") {
+      const auto content = section.content();
+      return BinarySection(section.name(),
+                           section.virtual_address(),
+                           utils::Bytes(content.begin(), content.end()));
     }
   }
-  if (!has_text) {
-    return std::nullopt;
-  }
-
-  return loader;
+  UNREACHABLE("No executable code section found");
 }
 
-BinaryLoader::~BinaryLoader() noexcept = default;
-
-BinaryLoader::BinaryLoader(BinaryLoader&& other) noexcept
-    : entry_point_(other.entry_point_)
-    , sections_(std::move(other.sections_)) {
-  other.entry_point_ = 0;
+Architecture LiefBinaryParser::GetArchitecture() const {
+  using arch = LIEF::Header::ARCHITECTURES;
+  return pBinary_->header().architecture() == arch::X86_64 ? Architecture::kX86_64 
+                                                           : Architecture::kUnknown;
 }
 
-BinaryLoader& BinaryLoader::operator=(BinaryLoader&& other) noexcept {
-  if (this != &other) {
-    entry_point_ = other.entry_point_;
-    sections_ = std::move(other.sections_);
-
-    other.entry_point_ = 0;
-  }
-  return *this;
+uint64_t LiefBinaryParser::GetEntryPoint() const {
+  return pBinary_->entrypoint();
 }
 
-std::optional<std::reference_wrapper<const Section>>
-BinaryLoader::get_section(std::string_view name) const noexcept {
-  for (const auto& section : sections_) {
-    if (section.name == name) {
-      return std::cref(section);
-    }
-  }
-  return std::nullopt;
-}
-
-std::optional<uint64_t>
-BinaryLoader::vma_to_offset(uint64_t vma) const noexcept {
-  for (const auto& section : sections_) {
-    if (vma >= section.vma && vma < section.vma + section.size) {
-      return vma - section.vma;
-    }
-  }
-  return std::nullopt;
+typename IBinaryParser::LoadableSegments LiefBinaryParser::GetLoadableSegments() const {
+  return LoadableSegments();
 }
