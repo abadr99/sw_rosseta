@@ -75,7 +75,9 @@ BinarySection LiefBinaryParser::GetExecutableCodeWindows(const LIEF::PE::Binary&
 }
 
 BinarySection LiefBinaryParser::GetExecutableCode() const {
-  assert(pBinary_ != nullptr);
+  if (pBinary_ == nullptr) {
+    return BinarySection("", 0, utils::Bytes());
+  }
   switch (pBinary_->format()) {
     case LIEF::Binary::FORMATS::ELF:  {
       const auto& elf = static_cast<const LIEF::ELF::Binary&>(*pBinary_);
@@ -91,12 +93,18 @@ BinarySection LiefBinaryParser::GetExecutableCode() const {
 }
 
 Architecture LiefBinaryParser::GetArchitecture() const {
+  if (pBinary_ == nullptr) {
+    return Architecture::kUnknown;
+  }
   using arch = LIEF::Header::ARCHITECTURES;
-  return pBinary_->header().architecture() == arch::X86_64 ? Architecture::kX86_64 
+  return pBinary_->header().architecture() == arch::X86_64 ? Architecture::kX86_64
                                                            : Architecture::kUnknown;
 }
 
 uint64_t LiefBinaryParser::GetEntryPoint() const {
+  if (pBinary_ == nullptr) {
+    return 0;
+  }
   return pBinary_->entrypoint();
 }
 
@@ -113,7 +121,9 @@ LiefBinaryParser::GetLoadableSegmentsWindows(const LIEF::PE::Binary& pe) const {
 }
 
 IBinaryParser::LoadableSegments LiefBinaryParser::GetLoadableSegments() const {
-  assert(pBinary_ != nullptr);
+  if (pBinary_ == nullptr) {
+    return {};
+  }
   switch (pBinary_->format()) {
     case LIEF::Binary::FORMATS::ELF:  {
       const auto& elf = static_cast<const LIEF::ELF::Binary&>(*pBinary_);
