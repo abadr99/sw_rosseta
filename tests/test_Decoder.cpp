@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <string>
 
-#include "Decoder.hpp"
-#include "Instructions.hpp"
+#include "frontend/Decoder.hpp"
+#include "frontend/Instruction.hpp"
 
 using rosetta::frontend::decode::Decoder;
 using rosetta::frontend::decode::X86Instruction;

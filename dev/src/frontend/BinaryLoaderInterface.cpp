@@ -5,7 +5,7 @@
 
 #include <cassert>
 
-#include "BinaryLoaderInterface.hpp"
+#include "frontend/BinaryLoaderInterface.hpp"
 
 using namespace rosetta::frontend;  // NOLINT
 using namespace rosetta::frontend::loader;  // NOLINT

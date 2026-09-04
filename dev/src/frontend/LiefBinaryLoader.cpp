@@ -4,8 +4,8 @@
 
 #include "utils/Macros.h"
 #include "utils/Types.h"
-#include "BinaryLoaderInterface.hpp"
-#include "LiefBinaryLoader.hpp"
+#include "frontend/BinaryLoaderInterface.hpp"
+#include "frontend/LiefBinaryLoader.hpp"
 
 using namespace rosetta::frontend;  // NOLINT
 using namespace rosetta::frontend::loader;  // NOLINT

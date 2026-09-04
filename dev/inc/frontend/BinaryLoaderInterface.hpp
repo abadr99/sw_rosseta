@@ -2,13 +2,7 @@
  * @file BinaryLoader.hpp
  * @brief Loads and parses x86-64 binaries (ELF, PE) via LIEF.
  *
- * Provides BinaryLoader, a non-throwing wrapper around LIEF's abstract
- * binary layer. Extracts the entry point and allocatable sections needed
- * by the DBT frontend before decoding begins.
- *
- * @author a.atta
- * @date 2026-08-20
- */
+*/
 
 #pragma once
 
