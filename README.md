@@ -3,17 +3,22 @@
 
 ## Prerequisites
 Before you begin, ensure you have the following installed:
-* **CMake** (v3.14 or higher)
-* **C++17** compatible compiler (GCC, Clang, or MSVC)
+* **CMake** (v3.15 or higher)
+* **C++17** compatible compiler (GCC/Clang on Linux, MSVC on Windows)
 * **Python 3** (required for the linting script)
+
+LIEF is vendored as a prebuilt SDK under `third_party/lief/`. CMake unpacks it
+into the build directory; you do not need to compile LIEF yourself.
 
 ### Build the Project
 ```bash
-# Step 1: Generate the build system files
-cmake -B build
+# Linux
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
 
-# Step 2: Compile the code
-cmake --build build
+# Windows (MSVC, NMake — same single-config flow as Linux)
+# cmake -B build -G "NMake Makefiles" -DCMAKE_BUILD_TYPE=Release
+# cmake --build build --parallel
 ```
 ### Run the Application
 ```
@@ -21,8 +26,7 @@ cmake --build build
 ```
 ### Run the Tests
 ```bash
-# Unit testing
-./build/tests/rosetta_unit_test
+./build/tests/unit_tests
 # or using ctest
 ctest --test-dir build --output-on-failure
 ```

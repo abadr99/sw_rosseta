@@ -5,9 +5,10 @@
 #include <string>
 #include <utility>
 
-#include "binary_loader.hpp"
+#include "frontend/BinaryLoader.hpp"
 
 namespace fs = std::filesystem;
+namespace loader = rosetta::frontend::loader;
 
 class BinaryLoaderTest : public ::testing::Test {
  protected:

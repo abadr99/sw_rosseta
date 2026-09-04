@@ -1,8 +1,7 @@
 set(CORE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/Decoder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/Instructions.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/inc/binary_loader.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/binary_loader.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Decoder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoader.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})

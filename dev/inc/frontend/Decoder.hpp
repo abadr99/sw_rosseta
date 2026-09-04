@@ -1,0 +1,30 @@
+#pragma once
+
+#include <Zydis/Zydis.h>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
+
+#include "frontend/Instruction.hpp"
+
+namespace rosetta {
+namespace frontend {
+namespace decode {
+
+class Decoder {
+ public:
+  Decoder();
+
+  // Decodes one instruction at `vma`. `length` bounds reads from `buffer`.
+  // Returns std::nullopt for null, incomplete, or invalid instruction bytes.
+  std::optional<X86Instruction> decode(uint64_t vma, const uint8_t* buffer,
+                                       size_t length);
+
+ private:
+  ZydisDecoder z_decoder;
+  ZydisFormatter z_formatter;
+};
+
+}  // namespace decode
+}  // namespace frontend
+}  // namespace rosetta
