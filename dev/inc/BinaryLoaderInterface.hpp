@@ -18,16 +18,16 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "utils/types.h"
+#include "utils/Types.h"
 
 namespace rosetta {
 namespace frontend {
 namespace loader {
 
-struct Permissions {
-  utils::Flag is_readable : 1;
-  utils::Flag is_writable : 1;
-  utils::Flag is_executable : 1;
+struct Perm {
+  utils::Flag R : 1;
+  utils::Flag W : 1;
+  utils::Flag X : 1;
 };
 
 enum class Architecture : uint8_t {
@@ -37,22 +37,31 @@ enum class Architecture : uint8_t {
 };
 
 struct LoadableSegment {
-  utils::Address virtual_address;
-  utils::Size memory_size;
-  Permissions permissions;
-  utils::Bytes data;
+  LoadableSegment(utils::Address va, 
+                  utils::Size siz, 
+                  const Perm& perm, 
+                  const utils::Bytes& data)
+  : VirtualAddress(va)
+  , Size(siz)
+  , Permissions(perm)
+  , Data(data)
+  { /* EMPTY */ }
+  utils::Address VirtualAddress;
+  utils::Size Size;
+  Perm Permissions;
+  utils::Bytes Data;
 };
 
 struct BinarySection {
   public:
-    BinarySection(const std::string& name, utils::Address virtual_address, const utils::Bytes& data);
-    std::string GetName() const;
-    utils::Address GetVirtualAddress() const;
-    utils::Bytes GetContent() const;
-  private:
-    std::string name_;
-    utils::Address virtual_address_;
-    utils::Bytes data_;
+    BinarySection(const std::string& name, utils::Address va, const utils::Bytes& data)
+    : Name(name)
+    , VirtualAddress(va)
+    , Data(data)
+    { /* EMPTY */ }
+    std::string Name;
+    utils::Address VirtualAddress;
+    utils::Bytes Data;
 
 };
 
@@ -72,18 +81,6 @@ class IBinaryParser {
     std::filesystem::path filepath_;
 };
 
-// Class that parses binaries using LIEF
-class LiefBinaryParser : public IBinaryParser {
-  public:
-    explicit LiefBinaryParser(const std::filesystem::path& filepath);
-    ~LiefBinaryParser() = default;
-    BinarySection GetExecutableCode() const override;
-    Architecture GetArchitecture() const override;
-    uint64_t GetEntryPoint() const override;
-    LoadableSegments GetLoadableSegments() const override;
-  private:
-    std::unique_ptr<LIEF::Binary> pBinary_;
-};
 
 }  // namespace loader
 }  // namespace frontend

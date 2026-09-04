@@ -22,4 +22,6 @@ namespace utils {
 #define UNREACHABLE(message) \
   ::rosetta::frontend::utils::Unreachable((message), __FILE__, __LINE__)
 
+#define UNIMPLEMENTED()\
+  ::rosetta::frontend::utils::Unreachable(("Unimplemented Function"), __FILE__, __LINE__)
 #endif
