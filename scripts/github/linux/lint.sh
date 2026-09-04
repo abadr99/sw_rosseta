@@ -1,3 +1,3 @@
 #!/bin/bash
 
-python ./scripts/cpplint.py --recursive ./dev ./tests
+python ./scripts/cpplint.py --linelength=100 --recursive ./dev ./tests
