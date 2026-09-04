@@ -210,6 +210,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -219,83 +220,116 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
+
           python -m pip install lit
 
-      - name: Install LLVM and Clang
+
+      - name: Download LLVM
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
 
-          Write-Host "Installing LLVM via Chocolatey..."
-          choco install llvm --version=17.0.6 -y --no-progress
+          $llvmVersion = "23.1.0"
+          $llvmUrl = "https://github.com/llvm/llvm-project/releases/download/llvmorg-$llvmVersion/clang+llvm-$llvmVersion-x86_64-pc-windows-msvc.tar.xz"
+          $llvmArchive = "$env:RUNNER_TEMP\llvm.tar.xz"
+          $llvmRoot = "$env:RUNNER_TEMP\llvm"
 
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "LLVM installation failed."
-            exit $LASTEXITCODE
-          }
+          Write-Host "Downloading LLVM $llvmVersion..."
+          Write-Host "URL: $llvmUrl"
 
-          $fileCheck = "C:\Program Files\LLVM\bin\FileCheck.exe"
+          Invoke-WebRequest `
+            -Uri $llvmUrl `
+            -OutFile $llvmArchive `
+            -UseBasicParsing `
+            -ErrorAction Stop
 
-          if (-not (Test-Path $fileCheck)) {
-            Write-Host "FileCheck not found at expected location."
-            Write-Host "Searching for FileCheck.exe..."
-
-            $found = Get-ChildItem `
-              -Path "C:\Program Files" `
-              -Filter "FileCheck.exe" `
-              -Recurse `
-              -ErrorAction SilentlyContinue |
-              Select-Object -First 1
-
-            if (-not $found) {
-              Write-Error "FileCheck.exe was not found."
-              exit 1
-            }
-
-            $fileCheck = $found.FullName
-          }
-
-          Write-Host "FileCheck found at:"
-          Write-Host $fileCheck
-
-      - name: Add LLVM to PATH
-        shell: powershell
-        run: |
-          $ErrorActionPreference = "Stop"
-
-          $llvmBin = "C:\Program Files\LLVM\bin"
-
-          if (-not (Test-Path "$llvmBin\FileCheck.exe")) {
-            Write-Error "LLVM bin directory does not contain FileCheck.exe."
+          if (-not (Test-Path $llvmArchive)) {
+            Write-Error "LLVM archive was not downloaded."
             exit 1
           }
 
-          Write-Host "Adding LLVM to PATH:"
-          Write-Host $llvmBin
+          Write-Host "LLVM archive downloaded successfully:"
+          Get-Item $llvmArchive
 
-          Add-Content -Path $env:GITHUB_PATH -Value $llvmBin
+          Write-Host "Extracting LLVM..."
 
-          # Make available in this step as well.
+          New-Item `
+            -ItemType Directory `
+            -Force `
+            -Path $llvmRoot |
+            Out-Null
+
+          # Windows 10/11 runners include tar.
+          tar -xf $llvmArchive -C $llvmRoot
+
+          Write-Host "LLVM archive extracted."
+
+      - name: Locate LLVM FileCheck
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          Write-Host "Searching for FileCheck.exe..."
+
+          $fileCheck = Get-ChildItem `
+            -Path "$env:RUNNER_TEMP\llvm" `
+            -Filter "FileCheck.exe" `
+            -Recurse `
+            -File `
+            -ErrorAction SilentlyContinue |
+            Select-Object -First 1
+
+          if (-not $fileCheck) {
+            Write-Host "LLVM directory contents:"
+            Get-ChildItem `
+              -Path "$env:RUNNER_TEMP\llvm" `
+              -Recurse `
+              -ErrorAction SilentlyContinue |
+              Select-Object FullName
+
+            Write-Error "FileCheck.exe was not found in the LLVM archive."
+            exit 1
+          }
+
+          $llvmBin = $fileCheck.Directory.FullName
+
+          Write-Host ""
+          Write-Host "========================================"
+          Write-Host "LLVM successfully located"
+          Write-Host "========================================"
+          Write-Host "LLVM bin:  $llvmBin"
+          Write-Host "FileCheck: $($fileCheck.FullName)"
+          Write-Host "========================================"
+
+          # Make LLVM available to all following GitHub Actions steps.
+          Add-Content `
+            -Path $env:GITHUB_PATH `
+            -Value $llvmBin
+
+          # Make LLVM available immediately as well.
           $env:Path = "$llvmBin;$env:Path"
+
 
       - name: Verify LIT and FileCheck
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
 
-          Write-Host "=== Verifying installations ==="
-
-          Write-Host "`n1. FileCheck location:"
+          Write-Host "=== FileCheck location ==="
           Get-Command FileCheck -ErrorAction Stop |
-            Select-Object Source
+            Select-Object Name, Source
 
-          Write-Host "`n2. FileCheck version:"
+          Write-Host ""
+          Write-Host "=== FileCheck version ==="
           FileCheck --version
 
-          Write-Host "`n3. Lit version:"
+          Write-Host ""
+          Write-Host "=== Lit version ==="
           lit --version
 
-          Write-Host "`nAll tools verified successfully!"
+          Write-Host ""
+          Write-Host "LLVM and Lit verified successfully."
+
 
       - name: Download Windows build artifact
         uses: actions/download-artifact@v4
@@ -321,8 +355,13 @@ jobs:
             Select-Object -First 1
 
           if (-not $rosetta) {
+            Write-Host ""
             Write-Host "Artifact contents:"
-            Get-ChildItem -Path build -Recurse |
+
+            Get-ChildItem `
+              -Path build `
+              -Recurse `
+              -ErrorAction SilentlyContinue |
               Select-Object FullName
 
             Write-Error "Rosetta executable was not found."
@@ -348,15 +387,22 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
 
-          if (-not (Test-Path "build/dev/rosetta.exe")) {
-            Write-Error "build/dev/rosetta.exe does not exist."
+          $rosetta = "build/dev/rosetta.exe"
+
+          if (-not (Test-Path $rosetta)) {
+            Write-Error "$rosetta does not exist."
             exit 1
           }
 
-          Get-Item "build/dev/rosetta.exe"
+          Write-Host "Rosetta verified:"
+          Get-Item $rosetta
+
 
       - name: Run LIT Regression Suite
         shell: powershell
         run: |
           $ErrorActionPreference = "Stop"
+
+          Write-Host "Running Windows LIT regression suite..."
+
           lit -v scripts/Lit_Script
