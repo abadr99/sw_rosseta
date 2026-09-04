@@ -71,4 +71,5 @@ Testing/
 # vscode residue
 .vscode/
 scripts/Lit_Script/Output/
-scripts/Lit_Script/.lit_test_times.txt
+tests/Regression_Tests/Output/
+.lit_test_times.txt
