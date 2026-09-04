@@ -9,16 +9,15 @@
  *
  * @author a.atta
  * @date 2026-08-20
- */
+*/
 
- #include "frontend/BinaryLoader.hpp"
- 
- #include <string>
- #include <memory>
+#include <memory>
 #include <vector>
 #include <utility>
+#include <string>
 
 #include <LIEF/LIEF.hpp>
+#include "frontend/BinaryLoader.hpp"
 
 using rosetta::frontend::loader::BinaryLoader;
 using rosetta::frontend::loader::Section;
