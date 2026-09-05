@@ -1,5 +1,5 @@
-#ifndef DEV_INC_UTILS_TYPES_H_
-#define DEV_INC_UTILS_TYPES_H_
+#ifndef DEV_INC_UTILS_TYPES_HPP_
+#define DEV_INC_UTILS_TYPES_HPP_
 
 #include <cstdint>
 #include <vector>
@@ -18,4 +18,4 @@ typedef bool Flag;
 }  // namespace frontend
 }  // namespace rosetta
 
-#endif  // DEV_INC_UTILS_TYPES_H_
+#endif  // DEV_INC_UTILS_TYPES_HPP_
