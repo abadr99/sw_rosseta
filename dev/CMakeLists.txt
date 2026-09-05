@@ -4,6 +4,7 @@ set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CPU/CpuState.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})

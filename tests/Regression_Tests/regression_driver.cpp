@@ -1,8 +1,14 @@
 #include <cstdint>
 #include <iostream>
+#include <memory>
 
-#include "frontend/BinaryLoader.hpp"
+#include "frontend/BinaryLoaderInterface.hpp"
+#include "frontend/LiefBinaryLoader.hpp"
 #include "frontend/Decoder.hpp"
+
+using rosetta::frontend::loader::LiefBinaryParser;
+using rosetta::frontend::loader::Architecture;
+using rosetta::frontend::decode::Decoder;
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -10,33 +16,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const auto loader =
-        rosetta::frontend::loader::BinaryLoader::create(argv[1]);
+    auto parser = std::make_unique<LiefBinaryParser>(argv[1]);
 
-    if (!loader) {
+    if (parser->GetArchitecture() != Architecture::kX86_64) {
         std::cerr << "Error: Failed to parse x86-64 ELF binary.\n";
         return 1;
     }
 
-    const auto text = loader->get_section(".text");
+    const auto section = parser->GetExecutableCode();
 
-    if (!text || text->get().data.empty()) {
-        std::cerr << "Error: No non-empty .text section found.\n";
+    if (section.Data.empty()) {
+        std::cerr << "Error: No executable section found.\n";
         return 1;
     }
 
-    const auto& section = text->get();
+    Decoder decoder;
 
-    rosetta::frontend::decode::Decoder decoder;
-
-    uint64_t vma = section.vma;
+    uint64_t vma = section.VirtualAddress;
     size_t offset = 0;
 
-    while (offset < section.data.size()) {
+    while (offset < section.Data.size()) {
         const auto instruction = decoder.decode(
             vma,
-            section.data.data() + offset,
-            section.data.size() - offset);
+            section.Data.data() + offset,
+            section.Data.size() - offset);
 
         if (!instruction || instruction->get_length() == 0) {
             std::cerr
