@@ -38,7 +38,6 @@ BinarySection LiefBinaryParser::GetExecutableCodeLinux(const LIEF::ELF::Binary& 
     utils::Address end_address = start_address + segment.virtual_size();
     if (pBinary_->entrypoint() >= start_address && pBinary_->entrypoint() < end_address) {
       // Entry point is in this section 
-      // const std::string& name, utils::Address va, const utils::Bytes& data
       return BinarySection("exe_section",   // TODO(@abadr99): Check if this is the correct name
                             segment.virtual_address(), 
                             utils::Bytes(segment.content().begin(), segment.content().end()));
