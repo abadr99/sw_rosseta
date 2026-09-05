@@ -1,7 +1,8 @@
 set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Decoder.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoader.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
 )
 

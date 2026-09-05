@@ -1,5 +1,5 @@
-#include "frontend/Instruction.hpp"
 
+#include "frontend/Instruction.hpp"
 #include <stdexcept>
 #include <string>
 #include <utility>
