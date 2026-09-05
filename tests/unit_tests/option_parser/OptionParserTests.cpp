@@ -36,7 +36,7 @@ TEST(Cli11OptionParserTest, ParsesLongOptionsIntoBoundValues) {
   parser.AddOption("-o,--output", output, true, "Output file");
   parser.AddOption("-s,--stop-after", stage, false, "Pipeline stage");
 
-  Argv args({"rosetta", "--input", "in.bin", "--output", "out.ll", "--stop-after", "loader"});
+  Argv args({"rosetta", "--input", "in.bin", "--output", "out.ll", "--stop-after", "loader"});  // NOLINT
   ASSERT_NO_THROW(parser.Parse(args.Count(), args.Values()));
 
   EXPECT_EQ(input, "in.bin");
@@ -126,7 +126,7 @@ TEST(Cli11OptionParserTest, UnknownOptionThrows) {
   parser.AddOption("-i,--input", input, true, "Input file");
   parser.AddOption("-o,--output", output, true, "Output file");
 
-  Argv args({"rosetta", "--input", "in.bin", "--output", "out.ll", "--stop-after", "loader"});
+  Argv args({"rosetta", "--input", "in.bin", "--output", "out.ll", "--stop-after", "loader"});  // NOLINT
   EXPECT_THROW(parser.Parse(args.Count(), args.Values()), CLI::ParseError);
 }
 

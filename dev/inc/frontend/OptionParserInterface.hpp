@@ -1,5 +1,5 @@
-#ifndef FRONTEND_OPTION_PARSER_INTERFACE_HPP
-#define FRONTEND_OPTION_PARSER_INTERFACE_HPP
+#ifndef DEV_INC_FRONTEND_OPTIONPARSERINTERFACE_HPP_
+#define DEV_INC_FRONTEND_OPTIONPARSERINTERFACE_HPP_
 
 #include <cstdint>
 #include <string>
@@ -12,7 +12,7 @@ namespace frontend {
 
 enum PipeLineStage : int {
     kLoader,
-    kDecoder, 
+    kDecoder,
     // -- Add new stages here --
     kAll,
 };
@@ -34,7 +34,7 @@ class OptionParserInterface {
     virtual Configurations GetConfigurations() = 0;
 };
 
-} // namespace frontend
-} // namespace rosetta
+}  // namespace frontend
+}  // namespace rosetta
 
-#endif // FRONTEND_OPTION_PARSER_INTERFACE_HPP
+#endif  // DEV_INC_FRONTEND_OPTIONPARSERINTERFACE_HPP_

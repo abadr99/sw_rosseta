@@ -1,3 +1,7 @@
+#include <string>
+#include <vector>
+#include <iostream>
+
 #include "frontend/Cli11OptionParser.hpp"
 #include "frontend/OptionParserInterface.hpp"
 
@@ -6,26 +10,25 @@ using rosetta::frontend::Configurations;
 
 Cli11OptionParser::Cli11OptionParser()
 : app_("Rosetta")
-{
-}
+{ /* EMPTY*/}
 
-void Cli11OptionParser::AddOption(const std::string& name, 
-                                  int& value, 
-                                  bool required, 
+void Cli11OptionParser::AddOption(const std::string& name,
+                                  int& value,
+                                  bool required,
                                   const std::string& description) {
     app_.add_option(name, value, description)->required(required);
 }
 
-void Cli11OptionParser::AddOption(const std::string& name, 
-                                  bool& value, 
-                                  bool required, 
+void Cli11OptionParser::AddOption(const std::string& name,
+                                  bool& value,
+                                  bool required,
                                   const std::string& description) {
     app_.add_option(name, value, description)->required(required);
 }
 
-void Cli11OptionParser::AddOption(const std::string& name, 
-                                  std::string& value, 
-                                  bool required, 
+void Cli11OptionParser::AddOption(const std::string& name,
+                                  std::string& value,
+                                  bool required,
                                   const std::string& description) {
     app_.add_option(name, value, description)->required(required);
 }
