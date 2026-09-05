@@ -4,8 +4,8 @@
 #include <LIEF/ELF.hpp>
 #include <LIEF/PE.hpp>
 
-#include "utils/Macros.h"
-#include "utils/Types.h"
+#include "utils/Macros.hpp"
+#include "utils/Types.hpp"
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/LiefBinaryLoader.hpp"
 

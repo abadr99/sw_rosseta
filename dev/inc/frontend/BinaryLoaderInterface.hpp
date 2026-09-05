@@ -12,7 +12,7 @@
 
 #include <LIEF/LIEF.hpp>
 
-#include "utils/Types.h"
+#include "utils/Types.hpp"
 
 namespace rosetta {
 namespace frontend {
