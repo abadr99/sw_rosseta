@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(googletest)
 
 set(TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/test_Decoder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/option_parser/OptionParserTests.cpp"
 )
 
 if(TEST_SOURCES)
