@@ -1,10 +1,13 @@
 set(CORE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Decoder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/BasicBlock.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Decoder.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/BasicBlock.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/ControlFlowGraph.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/CfgBuilderInterface.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/CfgBuilder.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
@@ -16,7 +19,7 @@ target_include_directories(sw_rosseta_lib
 )
 
 target_link_libraries(sw_rosseta_lib
-      PUBLIC
+        PUBLIC
         Zydis
         LIEF::LIEF
 )
