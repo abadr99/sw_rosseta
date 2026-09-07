@@ -49,6 +49,7 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+!tests/Regression_Tests/**/Makefile
 install_manifest.txt
 compile_commands.json
 
@@ -68,10 +69,17 @@ vcpkg_installed/
 Testing/
 .cache/
 
-# LLVM lit generates per-test scripts, temporary binaries, and timing state.
-scripts/Lit_Script/Output/
-scripts/Lit_Script/Lit_Tests/Output/
-scripts/Lit_Script/.lit_test_times.txt
+# LLVM lit test outputs across all subfolders and timing caches
+Output/
+**/Output/
+.lit_test_times.txt
+**/.lit_test_times.txt
+
+# Regression testing binary and temporary artifacts
+*.elf
+*.fake
+*.truncated
+*.bin
 
 # vscode residue — keep shared tasks / debug config
 .vscode/*

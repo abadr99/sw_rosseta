@@ -11,17 +11,13 @@ project_root = os.path.dirname(
     )
 )
 
-config.test_source_root = os.path.join(
-    project_root, 'tests', 'Regression_Tests'
-)
+config.test_source_root = os.path.join(project_root, "tests", "Regression_Tests")
+config.test_exec_root   = config.test_source_root
 
-regression_driver = os.path.join(
-    project_root, 'build', 'tests', 'regression_driver'
+rosetta_bin = os.path.join(
+    project_root, 'build', 'dev', 'rosetta'
 )
-
 if os.name == 'nt':
-    regression_driver += '.exe'
+    rosetta_bin += '.exe'
 
-config.substitutions.append(
-    ('%regression_driver', regression_driver)
-)
+config.substitutions.append(('%rosetta', rosetta_bin))
