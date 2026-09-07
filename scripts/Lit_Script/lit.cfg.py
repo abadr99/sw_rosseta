@@ -1,4 +1,5 @@
 import os
+import shutil
 import lit.formats
 
 config.name = 'sw_rosetta_lit'
@@ -11,17 +12,19 @@ project_root = os.path.dirname(
     )
 )
 
-config.test_source_root = os.path.join(
-    project_root, 'tests', 'Regression_Tests'
-)
+config.test_source_root = os.path.join(project_root, "tests", "Regression_Tests")
+config.test_exec_root   = config.test_source_root
 
-regression_driver = os.path.join(
-    project_root, 'build', 'tests', 'regression_driver'
-)
-
+# Main Rosetta binary
+rosetta_bin = os.path.join(project_root, 'build', 'dev', 'rosetta')
 if os.name == 'nt':
-    regression_driver += '.exe'
+    rosetta_bin += '.exe'
 
-config.substitutions.append(
-    ('%regression_driver', regression_driver)
-)
+# FileCheck resolution: use pip/system executable on Windows, vendored ELF on Linux
+if os.name == 'nt':
+    filecheck_bin = shutil.which('filecheck') or shutil.which('FileCheck') or 'filecheck'
+else:
+    filecheck_bin = os.path.join(project_root, 'third_party', 'llvm', 'FileCheck')
+
+config.substitutions.append(('%rosetta', rosetta_bin))
+config.substitutions.append(('FileCheck', filecheck_bin))
