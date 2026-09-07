@@ -35,5 +35,5 @@ ctest --test-dir build --output-on-failure
 ## Setup
 - Install `lit` tool 
 ## Run 
-`make -C ./build/ run-regression FILTER=path/to/filter`
-`make -C ./build/ run-regression`
+`make -C ./regression_tests/ FILTER=path/to/filter`
+`make -C ./regression_tests/ `

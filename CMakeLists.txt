@@ -53,30 +53,3 @@ enable_testing()
 add_subdirectory(dev)
 add_subdirectory(tests/unit_tests)
 
-# ==========================================
-# Integration Testing (LLVM lit)
-# ==========================================
-find_program(LIT_TOOL NAMES lit)
-
-if(LIT_TOOL)
-    # Do not pass Make's --filter=$(FILTER): Ninja treats $ as an escape
-    # (build.ninja: bad $-escape). Use -DLIT_FILTER=regex if you need a filter.
-    set(LIT_FILTER "" CACHE STRING "Optional lit --filter regular expression")
-    set(_lit_cmd ${LIT_TOOL} -v --param "build_dir=${CMAKE_BINARY_DIR}"
-        "${CMAKE_SOURCE_DIR}/tests/regression_tests")
-    if(LIT_FILTER)
-        list(APPEND _lit_cmd --filter=${LIT_FILTER})
-    endif()
-
-    add_custom_target(run-regressions
-        COMMAND ${_lit_cmd}
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        COMMENT "Running LLVM lit regression tests..."
-        VERBATIM
-    )
-    add_custom_target(clean-regressions
-        COMMAND find ./ -type d -name 'Output' -exec rm -rf {} +
-    )
-else()
-    message(WARNING "lit tool not found. 'make run-regressions' will not be available.")
-endif()
