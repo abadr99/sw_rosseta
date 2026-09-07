@@ -179,7 +179,7 @@ jobs:
         run: .\scripts\github\windows\test.ps1
 
 
-  # ----------------------------- LIT Regression Windows -----------------------------
+ # ----------------------------- LIT Regression Windows -----------------------------
 
   regression-tests-windows:
     runs-on: windows-latest
@@ -194,15 +194,16 @@ jobs:
         with:
           python-version: '3.x'
 
-      - name: Install Lit and Make
+      - name: Install Lit, FileCheck and Make
         run: |
-          python -m pip install lit
+          python -m pip install lit filecheck
           choco install make -y
 
-      - name: Verify Vendored FileCheck.exe
+      - name: Verify Tools
         shell: cmd
         run: |
-          third_party\llvm\FileCheck.exe --version
+          filecheck --version
+          lit --version
 
       - name: Download Windows build artifact
         uses: actions/download-artifact@v4

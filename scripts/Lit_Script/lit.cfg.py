@@ -1,4 +1,5 @@
 import os
+import shutil
 import lit.formats
 
 config.name = 'sw_rosetta_lit'
@@ -19,10 +20,11 @@ rosetta_bin = os.path.join(project_root, 'build', 'dev', 'rosetta')
 if os.name == 'nt':
     rosetta_bin += '.exe'
 
-# Vendored FileCheck binary
-filecheck_bin = os.path.join(project_root, 'third_party', 'llvm', 'FileCheck')
+# FileCheck resolution: use pip/system executable on Windows, vendored ELF on Linux
 if os.name == 'nt':
-    filecheck_bin += '.exe'
+    filecheck_bin = shutil.which('filecheck') or shutil.which('FileCheck') or 'filecheck'
+else:
+    filecheck_bin = os.path.join(project_root, 'third_party', 'llvm', 'FileCheck')
 
 config.substitutions.append(('%rosetta', rosetta_bin))
 config.substitutions.append(('FileCheck', filecheck_bin))
