@@ -184,11 +184,11 @@ jobs:
         run: .\scripts\github\windows\test.ps1
 
 
-  # ----------------------------- LIT Regression Windows -----------------------------
+ # ----------------------------- LIT Regression Windows -----------------------------
 
   regression-tests-windows:
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     needs: test-win
 
     steps:
@@ -199,21 +199,9 @@ jobs:
         run: |
           echo "C:\Program Files\Git\usr\bin" >> "$GITHUB_PATH"
 
-      - name: Set up Python & Lit
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
       - name: Install Lit and FileCheck
         run: |
-          python -m pip install lit filecheck
-
-      - name: Verify Tools
-        shell: cmd
-        run: |
-          make --version
-          filecheck --version
-          lit --version
+          python -m pip install --no-warn-script-location lit filecheck
 
       - name: Download Windows build artifact
         uses: actions/download-artifact@v4
