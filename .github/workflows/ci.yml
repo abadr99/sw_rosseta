@@ -7,7 +7,6 @@ on:
     branches: ["main"]
   workflow_dispatch:
 
-# A new push on the same branch cancels the in-flight run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -54,7 +53,6 @@ jobs:
           name: linux-build-artifact
           path: |
             build-linux/tests/unit_tests
-            build-linux/tests/regression_driver
             build-linux/**/rosetta
           if-no-files-found: error
           retention-days: 1
@@ -93,29 +91,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install LLVM, Lit and GCC
+      - name: Install Lit and GCC
         run: |
           sudo apt-get update
-          sudo apt-get install -y llvm gcc python3-pip
+          sudo apt-get install -y gcc python3-pip
           python3 -m pip install --user lit
 
-      - name: Add LLVM tools to PATH
+      - name: Setup Vendored FileCheck
         run: |
-          FILECHECK=$(find /usr/lib/llvm-* -type f -name FileCheck 2>/dev/null | head -n 1)
-
-          if [ -z "$FILECHECK" ]; then
-            echo "ERROR: FileCheck not found"
-            exit 1
-          fi
-
-          echo "Found FileCheck: $FILECHECK"
-          echo "$(dirname "$FILECHECK")" >> "$GITHUB_PATH"
-
-      - name: Verify LIT and FileCheck
-        run: |
-          lit --version
-          FileCheck --version
-          gcc --version
+          chmod +x third_party/llvm/FileCheck
+          ./third_party/llvm/FileCheck --version
 
       - name: Download Linux build artifact
         uses: actions/download-artifact@v4
@@ -123,30 +108,26 @@ jobs:
           name: linux-build-artifact
           path: build-linux/
 
-      - name: Locate and Setup Regression Driver
+      - name: Locate and Setup Rosetta Binary
         run: |
-          echo "Searching for regression_driver..."
+          echo "Searching for rosetta..."
+          ROSETTA_BIN=$(find build-linux -type f -name rosetta | head -n 1)
 
-          REGRESSION_DRIVER=$(find build-linux -type f -name regression_driver | head -n 1)
-
-          if [ -z "$REGRESSION_DRIVER" ]; then
-            echo "ERROR: Regression driver was not found."
-            echo "Artifact contents:"
+          if [ -z "$ROSETTA_BIN" ]; then
+            echo "ERROR: rosetta binary was not found."
             find build-linux -type f | sort
             exit 1
           fi
 
-          echo "Found Regression Driver at: $REGRESSION_DRIVER"
-
-          mkdir -p build/tests
-          cp "$REGRESSION_DRIVER" build/tests/regression_driver
-          chmod +x build/tests/regression_driver
-          
-          echo "Regression driver installed at: build/tests/regression_driver"
-          ls -lh build/tests/regression_driver
+          echo "Found rosetta at: $ROSETTA_BIN"
+          mkdir -p build/dev
+          cp "$ROSETTA_BIN" build/dev/rosetta
+          chmod +x build/dev/rosetta
+          ls -lh build/dev/rosetta
 
       - name: Run LIT Regression Suite
         run: lit -v scripts/Lit_Script
+
 
   # ----------------------------- Building Windows -----------------------------
 
@@ -173,7 +154,6 @@ jobs:
           name: windows-build-artifact
           path: |
             build/tests/unit_tests.exe
-            build/tests/regression_driver.exe
             build/**/rosetta.exe
           if-no-files-found: error
           retention-days: 1
@@ -197,3 +177,56 @@ jobs:
 
       - name: Run Google Tests (Windows)
         run: .\scripts\github\windows\test.ps1
+
+
+  # ----------------------------- LIT Regression Windows -----------------------------
+
+  regression-tests-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    needs: test-win
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python & Lit
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install Lit and Make
+        run: |
+          python -m pip install lit
+          choco install make -y
+
+      - name: Verify Vendored FileCheck.exe
+        shell: cmd
+        run: |
+          third_party\llvm\FileCheck.exe --version
+
+      - name: Download Windows build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-build-artifact
+          path: build-windows/
+
+      - name: Locate and Setup Rosetta Binary
+        shell: bash
+        run: |
+          echo "Locating rosetta.exe..."
+          ROSETTA_BIN=$(find build-windows -type f -name "rosetta.exe" | head -n 1)
+
+          if [ -z "$ROSETTA_BIN" ]; then
+            echo "ERROR: rosetta.exe was not found."
+            find build-windows -type f | sort
+            exit 1
+          fi
+
+          echo "Found rosetta at: $ROSETTA_BIN"
+          mkdir -p build/dev
+          cp "$ROSETTA_BIN" build/dev/rosetta.exe
+
+      - name: Run LIT Regression Suite
+        shell: bash
+        run: |
+          lit -v scripts/Lit_Script

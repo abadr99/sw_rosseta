@@ -14,10 +14,15 @@ project_root = os.path.dirname(
 config.test_source_root = os.path.join(project_root, "tests", "Regression_Tests")
 config.test_exec_root   = config.test_source_root
 
-rosetta_bin = os.path.join(
-    project_root, 'build', 'dev', 'rosetta'
-)
+# Main Rosetta binary
+rosetta_bin = os.path.join(project_root, 'build', 'dev', 'rosetta')
 if os.name == 'nt':
     rosetta_bin += '.exe'
 
+# Vendored FileCheck binary
+filecheck_bin = os.path.join(project_root, 'third_party', 'llvm', 'FileCheck')
+if os.name == 'nt':
+    filecheck_bin += '.exe'
+
 config.substitutions.append(('%rosetta', rosetta_bin))
+config.substitutions.append(('FileCheck', filecheck_bin))

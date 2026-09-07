@@ -89,3 +89,5 @@ Output/
 !.vscode/extensions.json
 tests/Regression_Tests/Output/
 tests/Regression_Tests/.lit_test_times.txt
+
+!third_party/llvm/FileCheck.exe
