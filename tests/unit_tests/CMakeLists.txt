@@ -8,9 +8,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 set(TEST_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/test_Decoder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/BinaryLoader/LiefBinaryLoaderTest.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/option_parser/OptionParserTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_Decoder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/binary_loader/LiefBinaryLoaderTest.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/option_parser/OptionParserTests.cpp"
 )
 
 if(TEST_SOURCES)
@@ -25,12 +25,3 @@ if(TEST_SOURCES)
     include(GoogleTest)
     gtest_discover_tests(unit_tests)
 endif()
-
-# add_executable(regression_driver
-#         Regression_Tests/regression_driver.cpp
-# )
-
-# target_link_libraries(regression_driver
-#         PRIVATE
-#         sw_rosseta_lib
-# )

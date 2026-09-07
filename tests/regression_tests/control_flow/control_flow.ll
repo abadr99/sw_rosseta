@@ -32,3 +32,5 @@
 ; CHECK-NEXT: push rax
 ; CHECK-NEXT: pop rbx
 ; CHECK-NEXT: ret
+
+; RUN: make clean

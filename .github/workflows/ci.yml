@@ -91,16 +91,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Lit and GCC
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc python3-pip
-          python3 -m pip install --user lit
-
-      - name: Setup Vendored FileCheck
-        run: |
-          chmod +x third_party/llvm/FileCheck
-          ./third_party/llvm/FileCheck --version
+      - name: Configure Regression Environment (Linux)
+        run: bash ./scripts/github/linux/config_regressions.sh
 
       - name: Download Linux build artifact
         uses: actions/download-artifact@v4
@@ -108,25 +100,8 @@ jobs:
           name: linux-build-artifact
           path: build-linux/
 
-      - name: Locate and Setup Rosetta Binary
-        run: |
-          echo "Searching for rosetta..."
-          ROSETTA_BIN=$(find build-linux -type f -name rosetta | head -n 1)
-
-          if [ -z "$ROSETTA_BIN" ]; then
-            echo "ERROR: rosetta binary was not found."
-            find build-linux -type f | sort
-            exit 1
-          fi
-
-          echo "Found rosetta at: $ROSETTA_BIN"
-          mkdir -p build/dev
-          cp "$ROSETTA_BIN" build/dev/rosetta
-          chmod +x build/dev/rosetta
-          ls -lh build/dev/rosetta
-
-      - name: Run LIT Regression Suite
-        run: lit -v scripts/Lit_Script
+      - name: Run Regressions (Linux)
+        run: make -C build-linux run-regressions
 
 
   # ----------------------------- Building Windows -----------------------------

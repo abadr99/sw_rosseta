@@ -51,7 +51,7 @@ find_package(LIEF ${LIEF_SDK_VERSION} REQUIRED COMPONENTS STATIC PATHS "${LIEF_S
 enable_testing()
 
 add_subdirectory(dev)
-add_subdirectory(tests)
+add_subdirectory(tests/unit_tests)
 
 # ==========================================
 # Integration Testing (LLVM lit)
@@ -59,13 +59,16 @@ add_subdirectory(tests)
 find_program(LIT_TOOL NAMES lit)
 
 if(LIT_TOOL)
-    add_custom_target(check-lit
+    add_custom_target(run-regressions
         # Run lit against the tests/lit directory in verbose mode (-v)
-        COMMAND ${LIT_TOOL} -v ${CMAKE_SOURCE_DIR}/scripts/Lit_Script
+        COMMAND ${LIT_TOOL} -v --param build_dir=${CMAKE_BINARY_DIR} ${CMAKE_SOURCE_DIR}/tests/regression_tests --filter=$(FILTER)
         # Force it to run from the build directory so relative paths work
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
         COMMENT "Running LLVM lit regression tests..."
     )
-else()
-    message(WARNING "lit tool not found. 'make check-lit' will not be available.")
+    add_custom_target(clean-regressions
+     COMMAND find ./ -type d -name 'Output' -exec rm -rf {} +
+    )
+else() 
+    message(WARNING "lit tool not found. 'make run-regression' will not be available.")
 endif()

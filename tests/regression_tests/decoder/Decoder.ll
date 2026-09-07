@@ -54,3 +54,4 @@
 ; CHECK-NEXT: pop rdx
 ; CHECK-NEXT: nop
 ; CHECK-NEXT: ret
+; RUN: make clean

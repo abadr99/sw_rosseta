@@ -27,3 +27,5 @@
 ; RUN: not %rosetta --input %t.truncated --output /dev/null --stop-after loader 2>&1 | FileCheck %s --check-prefix=CHECK-TRUNCATED
 
 ; CHECK-TRUNCATED: Error: Failed to parse x86-64 ELF binary.
+
+; RUN: make clean

@@ -11,3 +11,5 @@
 ; CHECK: dec rdi
 ; CHECK: jmp
 ; CHECK: ret
+
+; RUN: make clean

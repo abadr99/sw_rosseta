@@ -30,3 +30,10 @@ cmake --build build --parallel
 # or using ctest
 ctest --test-dir build --output-on-failure
 ```
+
+# Run regressions 
+## Setup
+- Install `lit` tool 
+## Run 
+`make -C ./build/ run-regression FILTER=path/to/filter`
+`make -C ./build/ run-regression`
