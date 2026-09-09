@@ -12,19 +12,18 @@ namespace rosetta {
 namespace middleend {
 namespace cfg {
 
-// Class that builds a ControlFlowGraph by splitting a decoded instruction
-// stream into basic blocks and wiring successor/predecessor edges
 class CfgBuilder : public ICfgBuilder {
  public:
   explicit CfgBuilder(const std::vector<frontend::decode::X86Instruction>& instructions);
-  ~CfgBuilder() = default;
+  ~CfgBuilder() override = default;
+
   ControlFlowGraph Build() const override;
 
  private:
   bool IsConditionalJump(ZydisMnemonic mnemonic) const;
   bool IsUnconditionalJump(ZydisMnemonic mnemonic) const;
-  bool IsCall(ZydisMnemonic mnemonic) const;
   bool IsReturn(ZydisMnemonic mnemonic) const;
+  bool IsDirectBranch(const frontend::decode::X86Instruction& instruction) const;
   frontend::utils::Address GetJumpTarget(
       const frontend::decode::X86Instruction& instruction) const;
 };

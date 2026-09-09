@@ -21,6 +21,7 @@ class ControlFlowGraph {
 
   bool HasBlock(frontend::utils::Address address) const;
   const basicblock::BasicBlock& GetBlock(frontend::utils::Address address) const;
+  basicblock::BasicBlock& GetBlock(frontend::utils::Address address);
   frontend::utils::Address GetEntryAddress() const;
 
   const Blocks& GetBlocks() const;

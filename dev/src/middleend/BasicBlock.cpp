@@ -1,12 +1,10 @@
 #include <middleend/BasicBlock.hpp>
+#include <algorithm>
 
 using rosetta::middleend::basicblock::BasicBlock;
 using rosetta::frontend::decode::X86Instruction;
 using rosetta::frontend::utils::Address;
 
-// NOTE: BasicBlock has no bulk constructor. The caller (e.g. CfgBuilder) is
-// responsible for calling AddInstruction() once per instruction, in address
-// order, to populate the block.
 void BasicBlock::AddInstruction(const X86Instruction& instruction) {
   if (instructions_.empty()) {
     start_address_ = instruction.get_address();
@@ -32,11 +30,16 @@ const BasicBlock::Instructions& BasicBlock::GetInstructions() const {
 }
 
 void BasicBlock::AddSuccessor(Address successor_address) {
-  successors_.push_back(successor_address);
+  if (std::find(successors_.begin(), successors_.end(), successor_address) == successors_.end()) {
+    successors_.push_back(successor_address);
+  }
 }
 
 void BasicBlock::AddPredecessor(Address predecessor_address) {
-  predecessors_.push_back(predecessor_address);
+  if (std::find(predecessors_.begin(), predecessors_.end(), predecessor_address)
+    == predecessors_.end()) {
+    predecessors_.push_back(predecessor_address);
+  }
 }
 
 const BasicBlock::Addresses& BasicBlock::GetSuccessors() const {

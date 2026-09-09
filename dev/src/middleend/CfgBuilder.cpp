@@ -2,7 +2,6 @@
 
 #include <map>
 #include <set>
-
 #include <vector>
 
 #include "utils/Macros.hpp"
@@ -50,12 +49,15 @@ bool CfgBuilder::IsUnconditionalJump(ZydisMnemonic mnemonic) const {
   return mnemonic == ZYDIS_MNEMONIC_JMP;
 }
 
-bool CfgBuilder::IsCall(ZydisMnemonic mnemonic) const {
-  return mnemonic == ZYDIS_MNEMONIC_CALL;
-}
-
 bool CfgBuilder::IsReturn(ZydisMnemonic mnemonic) const {
   return mnemonic == ZYDIS_MNEMONIC_RET;
+}
+
+bool CfgBuilder::IsDirectBranch(const X86Instruction& instruction) const {
+  if (instruction.get_operand_count() == 0) {
+    return false;
+  }
+  return instruction.get_operand(0).type == ZYDIS_OPERAND_TYPE_IMMEDIATE;
 }
 
 Address CfgBuilder::GetJumpTarget(const X86Instruction& instruction) const {
@@ -72,58 +74,68 @@ ControlFlowGraph CfgBuilder::Build() const {
     return graph;
   }
 
-  // Find every address where a new block must start: the entry point,
-  // every jump target, and every instruction right after a branch/return.
+  // 1. Identify basic block leaders
   std::set<Address> leaders = {instructions_.front().get_address()};
   for (size_t i = 0; i < instructions_.size(); ++i) {
     ZydisMnemonic mnemonic = instructions_[i].get_mnemonic();
     bool is_branch = IsConditionalJump(mnemonic) || IsUnconditionalJump(mnemonic);
-    if (is_branch) {
+
+    if (is_branch && IsDirectBranch(instructions_[i])) {
       leaders.insert(GetJumpTarget(instructions_[i]));
     }
+
     if ((is_branch || IsReturn(mnemonic)) && i + 1 < instructions_.size()) {
       leaders.insert(instructions_[i + 1].get_address());
     }
   }
 
-  // Split the instruction stream into basic blocks at those leaders.
+  // 2. Partition instructions into basic blocks
   std::map<Address, BasicBlock> blocks;
   BasicBlock current;
   for (size_t i = 0; i < instructions_.size(); ++i) {
     current.AddInstruction(instructions_[i]);
     bool is_last = (i + 1 == instructions_.size());
     bool next_is_leader = !is_last && leaders.count(instructions_[i + 1].get_address());
+
     if (is_last || next_is_leader) {
       blocks[current.GetStartAddress()] = current;
       current = BasicBlock();
     }
   }
 
-  // Wire successor/predecessor edges based on each block's last instruction.
+  // 3. Connect control-flow edges
   for (auto& [start, block] : blocks) {
     const X86Instruction& last = block.GetInstructions().back();
     ZydisMnemonic mnemonic = last.get_mnemonic();
     Address fallthrough = last.get_address() + last.get_length();
 
     if (IsConditionalJump(mnemonic)) {
-      Address target = GetJumpTarget(last);
-      if (blocks.count(target)) {
-        block.AddSuccessor(target);
-        blocks[target].AddPredecessor(start);
+      if (IsDirectBranch(last)) {
+        Address target = GetJumpTarget(last);
+        if (blocks.count(target)) {
+          block.AddSuccessor(target);
+          blocks[target].AddPredecessor(start);
+        }
       }
       if (blocks.count(fallthrough)) {
         block.AddSuccessor(fallthrough);
         blocks[fallthrough].AddPredecessor(start);
       }
     } else if (IsUnconditionalJump(mnemonic)) {
-      Address target = GetJumpTarget(last);
-      if (blocks.count(target)) {
-        block.AddSuccessor(target);
-        blocks[target].AddPredecessor(start);
+      if (IsDirectBranch(last)) {
+        Address target = GetJumpTarget(last);
+        if (blocks.count(target)) {
+          block.AddSuccessor(target);
+          blocks[target].AddPredecessor(start);
+        }
       }
-    } else if (!IsReturn(mnemonic) && blocks.count(fallthrough)) {
-      block.AddSuccessor(fallthrough);
-      blocks[fallthrough].AddPredecessor(start);
+      // Never add a fall-through edge for unconditional jumps!
+    } else if (!IsReturn(mnemonic)) {
+      // Normal sequential execution block
+      if (blocks.count(fallthrough)) {
+        block.AddSuccessor(fallthrough);
+        blocks[fallthrough].AddPredecessor(start);
+      }
     }
   }
 
