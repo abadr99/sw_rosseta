@@ -11,6 +11,7 @@ set(TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/test_Decoder.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/BinaryLoader/LiefBinaryLoaderTest.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/option_parser/OptionParserTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/test_cfg_builder.cpp"
 )
 
 if(TEST_SOURCES)
