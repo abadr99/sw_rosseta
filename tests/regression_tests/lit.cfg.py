@@ -13,6 +13,7 @@ config.test_exec_root   = config.test_source_root
 config.substitutions.append(('%build_dir', lit_config.params.get('build_dir', '')))
 # Main Rosetta binary
 rosetta_bin = os.path.join(project_root, 'build', 'dev', 'rosetta')
+MakeFilePath = os.path.join(project_root, 'tests')
 if os.name == 'nt':
     rosetta_bin += '.exe'
 
@@ -24,3 +25,4 @@ else:
 
 config.substitutions.append(('%rosetta', rosetta_bin))
 config.substitutions.append(('FileCheck', filecheck_bin))
+config.substitutions.append(('%MainMakeFile', MakeFilePath))

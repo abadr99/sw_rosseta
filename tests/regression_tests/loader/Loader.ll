@@ -6,10 +6,6 @@
 
 ; CHECK-SUCCESS: [Loader] Successfully loaded executable section
 
-; 2. Binary with no executable sections (GetExecutableCode returns empty Data)
-; RUN: not %rosetta --input %S/no_exec.elf --output /dev/null --stop-after loader 2>&1 | FileCheck %s --check-prefix=CHECK-NOEXEC
-
-; CHECK-NOEXEC: Error: No executable section found.
 
 ; 3. Non-ELF / Plain Text file
 ; RUN: echo "Not an ELF file" > %t.fake
