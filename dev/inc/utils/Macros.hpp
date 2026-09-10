@@ -5,7 +5,6 @@
 #include <cstdlib>
 
 namespace rosetta {
-namespace frontend {
 namespace utils {
 
 [[noreturn]] inline void Unreachable(const char* message, const char* file,
@@ -16,7 +15,6 @@ namespace utils {
 }
 
 }  // namespace utils
-}  // namespace frontend
 }  // namespace rosetta
 
 #define UNREACHABLE(message) \
