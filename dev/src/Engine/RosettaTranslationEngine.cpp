@@ -16,7 +16,6 @@ using rosetta::frontend::loader::Architecture;
 using rosetta::frontend::decode::Decoder;
 
 int RosettaTranslationEngine::Run(int argc, char* argv[]) {
-    
     // ---------------------------------------------------------
     // 1. ParseConfigurations Function
     // ---------------------------------------------------------
@@ -26,8 +25,11 @@ int RosettaTranslationEngine::Run(int argc, char* argv[]) {
         
         parser->AddOption("-i,--input", cnf_.InputFile, true, "Input file");
         parser->AddOption("-o,--output", cnf_.OutputFile, true, "Output file");
-        parser->AddOption("-s,--stop-after", stage, false, "Pipeline stage. stop after {loader, decoder, all}");
-        parser->AddOption("-d,--dump-input-instructions", cnf_.DumpInputInstructions, false, "Dump input instructions");
+        parser->AddOption("-s,--stop-after", stage, false,
+             "Pipeline stage. stop after {loader, decoder, all}");
+
+        parser->AddOption("-d,--dump-input-instructions",
+             cnf_.DumpInputInstructions, false, "Dump input instructions");
         
         parser->Parse(argc, argv);
         
@@ -98,7 +100,7 @@ int RosettaTranslationEngine::Run(int argc, char* argv[]) {
     // 3. Optimize Function
     // ---------------------------------------------------------
     auto Optimize = [&]() -> int {
-        // TODO: Implement optimization passes
+        // TODO(salah): Implement optimization passes
         return 0;
     };
 
@@ -106,7 +108,7 @@ int RosettaTranslationEngine::Run(int argc, char* argv[]) {
     // 4. Generate Function
     // ---------------------------------------------------------
     auto Generate = [&]() -> int {
-        // TODO: Implement code generation
+        // TODO(salah): Implement code generation
         return 0;
     };
 

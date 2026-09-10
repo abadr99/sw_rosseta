@@ -10,7 +10,6 @@ int main(int argc, char* argv[]) {
         
         // 2. Pass the command-line arguments and run the pipeline
         return engine.Run(argc, argv);
-
     } catch (const std::exception& e) {
         // Catch standard C++ exceptions (e.g., out of memory, bad memory access)
         std::cerr << "Fatal Error: " << e.what() << "\n";
