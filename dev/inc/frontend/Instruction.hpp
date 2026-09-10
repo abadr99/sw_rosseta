@@ -1,47 +1,63 @@
 #pragma once
 
-#include <Zydis/Zydis.h>
 #include <cstdint>
-#include <stdexcept>
 #include <string>
+#include <vector>
+
+#include "utils/Types.hpp"
 
 namespace rosetta {
 namespace frontend {
 namespace decode {
 
-class X86Instruction {
+enum class OperandKind : uint8_t {
+  kUnused = 0,
+  kRegister,
+  kMemory,
+  kImmediate,
+};
+
+// One instruction operand. Which fields are meaningful depends on OperandKind:
+//   kRegister:  reg
+//   kImmediate: immediate
+//   kMemory:    reg (base), index, scale, displacement
+struct Operand {
+  OperandKind kind = OperandKind::kUnused;
+  std::string reg;
+  std::string index;
+  uint8_t scale = 0;
+  int64_t displacement = 0;
+  int64_t immediate = 0;
+  uint64_t size_bits = 0;
+};
+
+class Instruction {
  public:
-  X86Instruction();
+  explicit Instruction(utils::Address addr, std::string mnemonic, uint8_t length,
+                       std::string text, uint32_t flags_read, uint32_t flags_written,
+                       std::vector<Operand> operands);
 
-  X86Instruction(uint64_t addr, const ZydisDecodedInstruction& z_inst,
-                 const ZydisDecodedOperand* z_ops, std::string disassembly);
+  utils::Address GetAddress() const { return address_; }
+  const std::string& GetMnemonic() const { return mnemonic_; }
+  uint8_t GetLength() const { return length_; }
+  const std::string& GetText() const { return text_; }
 
-  // Getters for the backend translator
-  uint64_t get_address() const { return address; }
-  ZydisMnemonic get_mnemonic() const { return mnemonic; }
-  uint8_t get_length() const { return length; }
-  std::string get_text() const { return text; }
+  uint32_t GetFlagsRead() const { return flags_read_; }
+  uint32_t GetFlagsWritten() const { return flags_written_; }
 
-  ZydisAccessedFlagsMask get_flags_read() const { return flags_read; }
-  ZydisAccessedFlagsMask get_flags_written() const { return flags_written; }
-
-  uint8_t get_operand_count() const { return operand_count; }
-  const ZydisDecodedOperand& get_operand(uint8_t index) const;
+  uint8_t GetOperandCount() const { return static_cast<uint8_t>(operands_.size()); }
+  const Operand& GetOperand(uint8_t index) const;
 
  private:
-  // Core Identity
-  uint64_t address;
-  ZydisMnemonic mnemonic;
-  uint8_t length;
-  std::string text;
+  utils::Address address_;
+  std::string mnemonic_;
+  uint8_t length_;
+  std::string text_;
 
-  // CPU Flags
-  ZydisAccessedFlagsMask flags_read;
-  ZydisAccessedFlagsMask flags_written;
+  uint32_t flags_read_;
+  uint32_t flags_written_;
 
-  // Source and Destination Operands
-  uint8_t operand_count;
-  ZydisDecodedOperand operands[ZYDIS_MAX_OPERAND_COUNT];
+  std::vector<Operand> operands_;
 };
 
 }  // namespace decode
