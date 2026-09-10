@@ -103,8 +103,15 @@ jobs:
       - name: Setup Rosetta Binary Path
         run: |
           ROSETTA_BIN=$(find build -type f -name "rosetta" | head -n 1)
+          if [ -z "$ROSETTA_BIN" ]; then
+            echo "ERROR: rosetta binary not found."
+            find build -type f | sort
+            exit 1
+          fi
           mkdir -p build/dev
-          cp "$ROSETTA_BIN" build/dev/rosetta
+          if [ "$ROSETTA_BIN" != "build/dev/rosetta" ]; then
+            cp "$ROSETTA_BIN" build/dev/rosetta
+          fi
           chmod +x build/dev/rosetta
 
       - name: Run Regressions (Linux)
@@ -205,10 +212,11 @@ jobs:
 
           echo "Found rosetta at: $ROSETTA_BIN"
           mkdir -p build/dev
-          cp "$ROSETTA_BIN" build/dev/rosetta.exe
+          if [ "$ROSETTA_BIN" != "build/dev/rosetta.exe" ]; then
+            cp "$ROSETTA_BIN" build/dev/rosetta.exe
+          fi
 
       - name: Run LIT Regression Suite
         shell: bash
         run: |
           lit -v tests/regression_tests
-          
