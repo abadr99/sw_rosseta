@@ -9,8 +9,8 @@ FetchContent_MakeAvailable(googletest)
 
 set(TEST_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/test_Decoder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/BinaryLoader/LiefBinaryLoaderTest.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/unit_tests/option_parser/OptionParserTests.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/binary_loader/LiefBinaryLoaderTest.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/option_parser/OptionParserTests.cpp"
 )
 
 if(TEST_SOURCES)
