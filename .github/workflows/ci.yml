@@ -101,18 +101,7 @@ jobs:
           path: build/
 
       - name: Setup Rosetta Binary Path
-        run: |
-          ROSETTA_BIN=$(find build -type f -name "rosetta" | head -n 1)
-          if [ -z "$ROSETTA_BIN" ]; then
-            echo "ERROR: rosetta binary not found."
-            find build -type f | sort
-            exit 1
-          fi
-          mkdir -p build/dev
-          if [ "$ROSETTA_BIN" != "build/dev/rosetta" ]; then
-            cp "$ROSETTA_BIN" build/dev/rosetta
-          fi
-          chmod +x build/dev/rosetta
+        run: bash ./scripts/github/linux/regression_setup_rosetta.sh
 
       - name: Run Regressions (Linux)
         run: make -C tests/regression_tests run-tests
@@ -199,22 +188,7 @@ jobs:
           path: build/
 
       - name: Locate and Setup Rosetta Binary
-        shell: bash
-        run: |
-          echo "Locating rosetta.exe..."
-          ROSETTA_BIN=$(find build -type f -name "rosetta.exe" | head -n 1)
-
-          if [ -z "$ROSETTA_BIN" ]; then
-            echo "ERROR: rosetta.exe was not found."
-            find build -type f | sort
-            exit 1
-          fi
-
-          echo "Found rosetta at: $ROSETTA_BIN"
-          mkdir -p build/dev
-          if [ "$ROSETTA_BIN" != "build/dev/rosetta.exe" ]; then
-            cp "$ROSETTA_BIN" build/dev/rosetta.exe
-          fi
+        run: .\scripts\github\windows\regression_setup_rosetta.ps1
 
       - name: Run LIT Regression Suite
         shell: bash
