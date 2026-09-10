@@ -23,7 +23,7 @@ class ZydisInstructionDecoder : public IDecoder {
  private:
   static Operand ToOperand(const ZydisDecodedOperand& z_op);
 
-  ::ZydisDecoder z_decoder_;
+  ZydisDecoder z_decoder_;
   ZydisFormatter z_formatter_;
 };
 }  // namespace decode
