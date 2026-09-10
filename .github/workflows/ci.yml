@@ -52,7 +52,7 @@ jobs:
         with:
           name: linux-build-artifact
           path: |
-            build-linux/tests/unit_tests
+            build-linux/**/unit_tests
             build-linux/**/rosetta
           if-no-files-found: error
           retention-days: 1
@@ -98,10 +98,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-build-artifact
-          path: build-linux/
+          path: build/
+
+      - name: Setup Rosetta Binary Path
+        run: |
+          ROSETTA_BIN=$(find build -type f -name "rosetta" | head -n 1)
+          mkdir -p build/dev
+          cp "$ROSETTA_BIN" build/dev/rosetta
+          chmod +x build/dev/rosetta
 
       - name: Run Regressions (Linux)
-        run: make -C build-linux run-regressions
+        run: make -C tests/regression_tests run-tests
 
 
   # ----------------------------- Building Windows -----------------------------
@@ -133,7 +140,7 @@ jobs:
         with:
           name: windows-build-artifact
           path: |
-            build/tests/unit_tests.exe
+            build/**/unit_tests.exe
             build/**/rosetta.exe
           if-no-files-found: error
           retention-days: 1
@@ -149,7 +156,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Windows test binary
+      - name: Download Windows build artifact
         uses: actions/download-artifact@v4
         with:
           name: windows-build-artifact
@@ -159,7 +166,7 @@ jobs:
         run: .\scripts\github\windows\test.ps1
 
 
- # ----------------------------- LIT Regression Windows -----------------------------
+  # ----------------------------- LIT Regression Windows -----------------------------
 
   regression-tests-windows:
     runs-on: windows-latest
@@ -169,7 +176,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Add Git POSIX tools (make) to PATH
+      - name: Add Git POSIX tools to PATH
         shell: bash
         run: |
           echo "C:\Program Files\Git\usr\bin" >> "$GITHUB_PATH"
@@ -182,17 +189,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-build-artifact
-          path: build-windows/
+          path: build/
 
       - name: Locate and Setup Rosetta Binary
         shell: bash
         run: |
           echo "Locating rosetta.exe..."
-          ROSETTA_BIN=$(find build-windows -type f -name "rosetta.exe" | head -n 1)
+          ROSETTA_BIN=$(find build -type f -name "rosetta.exe" | head -n 1)
 
           if [ -z "$ROSETTA_BIN" ]; then
             echo "ERROR: rosetta.exe was not found."
-            find build-windows -type f | sort
+            find build -type f | sort
             exit 1
           fi
 
@@ -203,4 +210,5 @@ jobs:
       - name: Run LIT Regression Suite
         shell: bash
         run: |
-          lit -v scripts/Lit_Script
+          lit -v tests/regression_tests
+          
