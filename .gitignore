@@ -49,7 +49,7 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
-!tests/Regression_Tests/**/Makefile
+!tests/regression_tests/**/Makefile
 install_manifest.txt
 compile_commands.json
 
@@ -77,6 +77,7 @@ Output/
 
 # Regression testing binary and temporary artifacts
 *.elf
+!tests/regression_tests/**/*.elf
 *.fake
 *.truncated
 *.bin
@@ -87,7 +88,9 @@ Output/
 !.vscode/launch.json
 !.vscode/c_cpp_properties.json
 !.vscode/extensions.json
-tests/Regression_Tests/Output/
-tests/Regression_Tests/.lit_test_times.txt
+
+# Lit residues
+tests/regression_tests/Output/
+tests/regression_tests/.lit_test_times.txt
 
 !third_party/llvm/FileCheck.exe
