@@ -49,7 +49,9 @@ int RosettaTranslationEngine::Run(int argc, char* argv[]) {
     // 2. RunFrontend Function
     // ---------------------------------------------------------
     auto RunFrontend = [&]() -> int {
-        auto parser = std::make_unique<LiefBinaryParser>(cnf_.InputFile);
+        std::unique_ptr<FrontEnd::loader::IBinaryParser> parser =
+        std::make_unique<LiefBinaryParser>(cnf_.InputFile);
+        
         if (parser->GetArchitecture() != Architecture::kX86_64) {
             std::cerr << "Error: Failed to parse x86-64 ELF binary.\n";
             return 1;
