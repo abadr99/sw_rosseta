@@ -10,11 +10,13 @@ namespace rosetta {
 namespace frontend {
 namespace instruction {
 
-enum InstructionCategory {
+enum class InstructionCategory {
+  kUnknown,
   kArithmetic,
   kLogical,
   kCondControlFlow,
   kUnCondControlFlow,
+  kDataTransfer,
 };
 
 enum class OperandType {
@@ -23,6 +25,7 @@ enum class OperandType {
   kImmediate,
   kMemory
 };
+
 struct InstructionOperand {
   OperandType Type;
   uint32_t Reg;  // Used with Type = kRegister
@@ -59,7 +62,6 @@ class Instruction {
   InstructionCategory& Category();
   std::string& Mnemonic();
   std::string& AssemblyText();
-
  private:
   uint32_t opcode_;
   std::vector<InstructionOperand> operands_;

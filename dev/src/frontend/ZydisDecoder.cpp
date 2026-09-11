@@ -20,23 +20,23 @@ uint32_t ZydisInstructionDecoder::RegisterToNumber(ZydisRegister reg) const {
   const ZydisRegister widened =
       ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, reg);
   switch (widened) {
-    case ZYDIS_REGISTER_RAX: return 1;
-    case ZYDIS_REGISTER_RBX: return 2;
-    case ZYDIS_REGISTER_RCX: return 3;
-    case ZYDIS_REGISTER_RDX: return 4;
-    case ZYDIS_REGISTER_RSI: return 5;
-    case ZYDIS_REGISTER_RDI: return 6;
-    case ZYDIS_REGISTER_RBP: return 7;
-    case ZYDIS_REGISTER_RSP: return 8;
-    case ZYDIS_REGISTER_R8:  return 9;
-    case ZYDIS_REGISTER_R9:  return 10;
-    case ZYDIS_REGISTER_R10: return 11;
-    case ZYDIS_REGISTER_R11: return 12;
-    case ZYDIS_REGISTER_R12: return 13;
-    case ZYDIS_REGISTER_R13: return 14;
-    case ZYDIS_REGISTER_R14: return 15;
-    case ZYDIS_REGISTER_R15: return 16;
-    default: return 0;
+    case ZYDIS_REGISTER_RAX: return 0;
+    case ZYDIS_REGISTER_RBX: return 1;
+    case ZYDIS_REGISTER_RCX: return 2;
+    case ZYDIS_REGISTER_RDX: return 3;
+    case ZYDIS_REGISTER_RSI: return 4;
+    case ZYDIS_REGISTER_RDI: return 5;
+    case ZYDIS_REGISTER_RBP: return 6;
+    case ZYDIS_REGISTER_RSP: return 7;
+    case ZYDIS_REGISTER_R8:  return 8;
+    case ZYDIS_REGISTER_R9:  return 9;
+    case ZYDIS_REGISTER_R10: return 10;
+    case ZYDIS_REGISTER_R11: return 11;
+    case ZYDIS_REGISTER_R12: return 12;
+    case ZYDIS_REGISTER_R13: return 13;
+    case ZYDIS_REGISTER_R14: return 14;
+    case ZYDIS_REGISTER_R15: return 15;
+    default: return 16;
   }
 }
 
@@ -66,20 +66,26 @@ InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand&
   return op;
 }
 
+// TODO(abdelrhmanatta): Add cases when expanding the supported ISA.
+//
+// Unmapped instructions currently default to kUnknown and should be 
+// explicitly categorized when working with the full ISA.
 InstructionCategory ZydisInstructionDecoder::ToCategory(ZydisInstructionCategory z_category) const {
   switch (z_category) {
     case ZYDIS_CATEGORY_COND_BR:
       return InstructionCategory::kCondControlFlow;
-    case ZYDIS_CATEGORY_UNCOND_BR:
-    case ZYDIS_CATEGORY_CALL:
+
     case ZYDIS_CATEGORY_RET:
       return InstructionCategory::kUnCondControlFlow;
-    case ZYDIS_CATEGORY_LOGICAL:
-    case ZYDIS_CATEGORY_LOGICAL_FP:
-    case ZYDIS_CATEGORY_SHIFT:
-      return InstructionCategory::kLogical;
-    default:
+
+    case ZYDIS_CATEGORY_DATAXFER:
+      return InstructionCategory::kDataTransfer;
+
+    case ZYDIS_CATEGORY_BINARY:
       return InstructionCategory::kArithmetic;
+
+    default:
+      return InstructionCategory::kUnknown;
   }
 }
 
@@ -101,7 +107,7 @@ std::unique_ptr<Instruction> ZydisInstructionDecoder::Decode(
   if (!ZYAN_SUCCESS(ZydisDecoderDecodeFull(&z_decoder, buffer, length,
                                            &instruction, z_ops))) {
     return nullptr;
-                                           }
+  }
 
   char formatted[256];
   if (!ZYAN_SUCCESS(ZydisFormatterFormatInstruction(
@@ -109,7 +115,7 @@ std::unique_ptr<Instruction> ZydisInstructionDecoder::Decode(
           instruction.operand_count_visible, formatted, sizeof(formatted),
           vma, ZYAN_NULL))) {
     return nullptr;
-          }
+  }
 
   std::vector<InstructionOperand> operands;
   for (uint8_t i = 0; i < instruction.operand_count_visible; ++i) {
