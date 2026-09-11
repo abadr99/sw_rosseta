@@ -78,7 +78,7 @@ TEST(ZydisInstructionDecoderTest, DecodeDataTransfer_MovMemory) {
   const InstructionOperand& src = ir.Operands()[1];
   EXPECT_EQ(src.Type, OperandType::kMemory);
   EXPECT_EQ(src.Mem.Base, 1u);  // RBX = 1
-  EXPECT_EQ(src.Mem.Index, 16u); // NONE defaults to 16
+  EXPECT_EQ(src.Mem.Index, 16u);  // NONE defaults to 16
 }
 
 TEST(ZydisInstructionDecoderTest, DecodeCondControlFlow_Jle) {
@@ -93,7 +93,7 @@ TEST(ZydisInstructionDecoderTest, DecodeCondControlFlow_Jle) {
   EXPECT_EQ(ir.Mnemonic(), "jle");
   EXPECT_EQ(ir.Category(), InstructionCategory::kCondControlFlow);
   ASSERT_EQ(ir.Operands().size(), 1u);
-  EXPECT_EQ(ir.Operands()[0].Type, OperandType::kImmediate); // Target addresses decode as immediates
+  EXPECT_EQ(ir.Operands()[0].Type, OperandType::kImmediate);
 }
 
 TEST(ZydisInstructionDecoderTest, DecodeUnCondControlFlow_Ret) {
