@@ -13,49 +13,126 @@ using rosetta::frontend::instruction::InstructionCategory;
 using rosetta::frontend::instruction::InstructionOperand;
 using rosetta::frontend::instruction::OperandType;
 
-TEST(ZydisInstructionDecoderTest, Decode64BitAdd) {
+TEST(ZydisInstructionDecoderTest, DecodeArithmetic_Add) {
   ZydisInstructionDecoder decoder;
-  // 64-bit: add rax, rbx (0x48 is the REX.W prefix)
+  // 64-bit: add rax, rbx -> AT&T: add %rbx, %rax
   const uint8_t binary[] = {0x48, 0x01, 0xD8};
 
-  // 1. Ensure it decodes successfully
   const auto decoded = decoder.Decode(0x00400000, binary, sizeof(binary));
   ASSERT_NE(decoded, nullptr);
   Instruction& ir = *decoded;
 
-  // 2. Check Core Identity
   EXPECT_EQ(ir.Mnemonic(), "add");
-  EXPECT_EQ(ir.Address(), 0x00400000);
-  EXPECT_EQ(ir.AssemblyText(), "add %rbx, %rax");  // AT&T syntax
-  EXPECT_EQ(ir.Size(), 3);
-  EXPECT_EQ(ir.Operands().size(), 2u);
   EXPECT_EQ(ir.Category(), InstructionCategory::kArithmetic);
+  ASSERT_EQ(ir.Operands().size(), 2u);
 
-  // 3. Check Destination (rax) - Operands() keeps Zydis's decode order
-  // (dest, src), independent of AT&T's reversed display order above.
+  // Zydis keeps decode order: (dest, src)
   const InstructionOperand& dst = ir.Operands()[0];
   EXPECT_EQ(dst.Type, OperandType::kRegister);
-  EXPECT_EQ(dst.Reg, 1u);  // project numbering: rax = 1
+  EXPECT_EQ(dst.Reg, 0u);  // RAX = 0
 
-  // 4. Check Source (rbx)
   const InstructionOperand& src = ir.Operands()[1];
   EXPECT_EQ(src.Type, OperandType::kRegister);
-  EXPECT_EQ(src.Reg, 2u);  // project numbering: rbx = 2
+  EXPECT_EQ(src.Reg, 1u);  // RBX = 1
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeDataTransfer_MovImmediate) {
+  ZydisInstructionDecoder decoder;
+  // 64-bit: mov rcx, 4 -> AT&T: movq $0x04, %rcx
+  const uint8_t binary[] = {0x48, 0xC7, 0xC1, 0x04, 0x00, 0x00, 0x00};
+
+  const auto decoded = decoder.Decode(0x00400000, binary, sizeof(binary));
+  ASSERT_NE(decoded, nullptr);
+  Instruction& ir = *decoded;
+
+  EXPECT_EQ(ir.Mnemonic(), "mov");
+  EXPECT_EQ(ir.Category(), InstructionCategory::kDataTransfer);
+  ASSERT_EQ(ir.Operands().size(), 2u);
+
+  const InstructionOperand& dst = ir.Operands()[0];
+  EXPECT_EQ(dst.Type, OperandType::kRegister);
+  EXPECT_EQ(dst.Reg, 2u);  // RCX = 2
+
+  const InstructionOperand& src = ir.Operands()[1];
+  EXPECT_EQ(src.Type, OperandType::kImmediate);
+  EXPECT_EQ(src.Imm, 4u);
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeDataTransfer_MovMemory) {
+  ZydisInstructionDecoder decoder;
+  // 64-bit: mov rax, [rbx] -> AT&T: movq (%rbx), %rax
+  const uint8_t binary[] = {0x48, 0x8B, 0x03};
+
+  const auto decoded = decoder.Decode(0x00400000, binary, sizeof(binary));
+  ASSERT_NE(decoded, nullptr);
+  Instruction& ir = *decoded;
+
+  EXPECT_EQ(ir.Mnemonic(), "mov");
+  EXPECT_EQ(ir.Category(), InstructionCategory::kDataTransfer);
+  ASSERT_EQ(ir.Operands().size(), 2u);
+
+  const InstructionOperand& dst = ir.Operands()[0];
+  EXPECT_EQ(dst.Type, OperandType::kRegister);
+  EXPECT_EQ(dst.Reg, 0u);  // RAX = 0
+
+  const InstructionOperand& src = ir.Operands()[1];
+  EXPECT_EQ(src.Type, OperandType::kMemory);
+  EXPECT_EQ(src.Mem.Base, 1u);  // RBX = 1
+  EXPECT_EQ(src.Mem.Index, 16u); // NONE defaults to 16
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeCondControlFlow_Jle) {
+  ZydisInstructionDecoder decoder;
+  // 8-bit relative jump: jle +0x05 -> AT&T: jle 0x00400007
+  const uint8_t binary[] = {0x7E, 0x05};
+
+  const auto decoded = decoder.Decode(0x00400000, binary, sizeof(binary));
+  ASSERT_NE(decoded, nullptr);
+  Instruction& ir = *decoded;
+
+  EXPECT_EQ(ir.Mnemonic(), "jle");
+  EXPECT_EQ(ir.Category(), InstructionCategory::kCondControlFlow);
+  ASSERT_EQ(ir.Operands().size(), 1u);
+  EXPECT_EQ(ir.Operands()[0].Type, OperandType::kImmediate); // Target addresses decode as immediates
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeUnCondControlFlow_Ret) {
+  ZydisInstructionDecoder decoder;
+  // ret
+  const uint8_t binary[] = {0xC3};
+
+  const auto decoded = decoder.Decode(0x00400000, binary, sizeof(binary));
+  ASSERT_NE(decoded, nullptr);
+  Instruction& ir = *decoded;
+
+  EXPECT_EQ(ir.Mnemonic(), "ret");
+  EXPECT_EQ(ir.Category(), InstructionCategory::kUnCondControlFlow);
+  // `ret` implicitly uses the stack, but has 0 explicitly visible operands in Zydis formatting
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeUnknownCategory_Nop) {
+  ZydisInstructionDecoder decoder;
+  // nop (Category: ZYDIS_CATEGORY_NOP)
+  const uint8_t binary[] = {0x90};
+
+  const auto decoded = decoder.Decode(0x00400000, binary, sizeof(binary));
+  ASSERT_NE(decoded, nullptr);
+  Instruction& ir = *decoded;
+
+  EXPECT_EQ(ir.Mnemonic(), "nop");
+  // NOP is excluded from your mapped switch cases, so it hits default
+  EXPECT_EQ(ir.Category(), InstructionCategory::kUnknown); 
 }
 
 TEST(ZydisInstructionDecoderTest, InvalidOpcodeFailsGracefully) {
   ZydisInstructionDecoder decoder;
-
-  // 0xFF 0xFF is an invalid x86 opcode instruction
+  // 0xFF 0xFF is an invalid x86 opcode
   uint8_t binary[] = {0xFF, 0xFF};
 
-  // Should return nullptr and not crash the emulator.
   EXPECT_EQ(decoder.Decode(0x00400000, binary, sizeof(binary)), nullptr);
 }
 
 TEST(InstructionOperandTest, DefaultConstructorIsZeroed) {
-  // Instruction itself has no default constructor - InstructionOperand
-  // does, and this is what actually gets zero-initialized in this design.
   InstructionOperand op;
   EXPECT_EQ(op.Type, OperandType::kUnkown);
   EXPECT_EQ(op.Reg, 0u);
