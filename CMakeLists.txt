@@ -13,10 +13,10 @@ endif()
 include(FetchContent)
 
 FetchContent_Declare(
-    zydis
-    GIT_REPOSITORY https://github.com/zyantific/zydis.git
-    GIT_TAG        v4.1.0
-    GIT_SHALLOW    TRUE
+        zydis
+        GIT_REPOSITORY https://github.com/zyantific/zydis.git
+        GIT_TAG        v4.1.0
+        GIT_SHALLOW    TRUE
 )
 FetchContent_MakeAvailable(zydis)
 
@@ -37,9 +37,9 @@ endif()
 if(NOT EXISTS "${LIEF_SDK_ROOT}/lib/cmake/LIEF/LIEFConfig.cmake")
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/lief-sdk")
     execute_process(
-        COMMAND ${CMAKE_COMMAND} -E tar xf "${LIEF_SDK_ARCHIVE}"
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/lief-sdk"
-        RESULT_VARIABLE LIEF_EXTRACT_RC
+            COMMAND ${CMAKE_COMMAND} -E tar xf "${LIEF_SDK_ARCHIVE}"
+            WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/lief-sdk"
+            RESULT_VARIABLE LIEF_EXTRACT_RC
     )
     if(NOT LIEF_EXTRACT_RC EQUAL 0)
         message(FATAL_ERROR "Failed to extract LIEF SDK from ${LIEF_SDK_ARCHIVE}")
@@ -52,4 +52,3 @@ enable_testing()
 
 add_subdirectory(dev)
 add_subdirectory(tests/unit_tests)
-
