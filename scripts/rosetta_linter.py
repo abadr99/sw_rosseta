@@ -21,6 +21,9 @@ Files Naming Convention:
 def check_file_naming_convention(file_posix):
     file_name = file_posix.name
     file_path = str(file_posix)
+    excludes = ['main.cpp']
+    if file_name in excludes:
+        return
     # Check if the file name starts with an uppercase letter
     if not file_name[0].isupper():
         report_error(file_path, "File name must start with an uppercase letter", "file_naming_convention")
