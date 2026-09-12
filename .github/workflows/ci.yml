@@ -18,13 +18,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    strategy:
+      matrix:
+        include:
+          - name: Run Linter
+            command: bash ./scripts/github/linux/lint.sh
+          - name: Run Rosetta Linter
+            command: python ./scripts/rosetta_linter.py ./dev ./tests/
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Linter
-        run: bash ./scripts/github/linux/lint.sh
-
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.command }}
 
   # ----------------------------- Building Linux -----------------------------
 
@@ -86,7 +92,7 @@ jobs:
   regression-tests-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: test-linux
+    needs: build-linux
 
     steps:
       - uses: actions/checkout@v4
@@ -167,7 +173,7 @@ jobs:
   regression-tests-windows:
     runs-on: windows-latest
     timeout-minutes: 5
-    needs: test-win
+    needs: build-win
 
     steps:
       - uses: actions/checkout@v4
