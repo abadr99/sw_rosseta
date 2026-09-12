@@ -92,7 +92,7 @@ jobs:
   regression-tests-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    needs: test-linux
+    needs: build-linux
 
     steps:
       - uses: actions/checkout@v4
@@ -173,7 +173,7 @@ jobs:
   regression-tests-windows:
     runs-on: windows-latest
     timeout-minutes: 5
-    needs: test-win
+    needs: build-linux
 
     steps:
       - uses: actions/checkout@v4
