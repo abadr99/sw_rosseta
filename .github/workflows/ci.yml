@@ -173,7 +173,7 @@ jobs:
   regression-tests-windows:
     runs-on: windows-latest
     timeout-minutes: 5
-    needs: build-linux
+    needs: build-win
 
     steps:
       - uses: actions/checkout@v4
