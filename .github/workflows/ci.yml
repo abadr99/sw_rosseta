@@ -18,14 +18,19 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 3
+    strategy:
+      matrix:
+        include:
+          - name: Run Linter
+            command: bash ./scripts/github/linux/lint.sh
+          - name: Run Rosetta Linter
+            command: python ./scripts/rosetta_linter.py ./dev ./tests/
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run Linter
-        run: bash ./scripts/github/linux/lint.sh
-      - name: Run Rosetta Linter
-        run: python ./scripts/rosetta_linter.py ./dev ./tests/
+      - name: ${{ matrix.name }}
+        run: ${{ matrix.command }}
 
   # ----------------------------- Building Linux -----------------------------
 
