@@ -1,10 +1,5 @@
-/**
- * @file BinaryLoader.hpp
- * @brief Loads and parses x86-64 binaries (ELF, PE) via LIEF.
- *
-*/
-
-#pragma once
+#ifndef DEV_INC_FRONTEND_BINARYLOADERINTERFACE_HPP_
+#define DEV_INC_FRONTEND_BINARYLOADERINTERFACE_HPP_
 
 #include <filesystem>
 #include <string>
@@ -78,3 +73,5 @@ class IBinaryParser {
 }  // namespace loader
 }  // namespace frontend
 }  // namespace rosetta
+
+#endif  // DEV_INC_FRONTEND_BINARYLOADERINTERFACE_HPP_

@@ -5,14 +5,14 @@
 
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/LiefBinaryLoader.hpp"
-#include "frontend/Decoder.hpp"
+#include "frontend/ZydisDecoder.hpp"
 #include "frontend/Cli11OptionParser.hpp"
 
 namespace FrontEnd = rosetta::frontend;
 using OptionParser = rosetta::frontend::Cli11OptionParser;
 using rosetta::frontend::loader::LiefBinaryParser;
 using rosetta::frontend::loader::Architecture;
-using rosetta::frontend::decode::Decoder;
+using rosetta::frontend::decoder::ZydisInstructionDecoder;
 
 
 void RosettaTranslationEngine::ParseConfigurations(
@@ -92,28 +92,28 @@ int RosettaTranslationEngine::Load() {
 }
 
 int RosettaTranslationEngine::Decode() {
-    Decoder decoder;
+    ZydisInstructionDecoder decoder;
 
     uint64_t vma = section_->VirtualAddress;
     size_t offset = 0;
 
     while (offset < section_->Data.size()) {
-        const auto instruction = decoder.decode(
+        const auto instruction = decoder.Decode(
             vma,
             section_->Data.data() + offset,
             section_->Data.size() - offset);
 
-        if (!instruction || instruction->get_length() == 0) {
+        if (!instruction || instruction->Size() == 0) {
             std::cerr << "Error: Unable to decode instruction at VMA 0x"
                       << std::hex << vma << "\n";
             return 1;
         }
 
         if (cnf_.DumpInputInstructions) {
-            std::cout << instruction->get_text() << "\n";
+            std::cout << instruction->AssemblyText() << "\n";
         }
 
-        const auto length = instruction->get_length();
+        const auto length = instruction->Size();
 
         offset += length;
         vma += length;
