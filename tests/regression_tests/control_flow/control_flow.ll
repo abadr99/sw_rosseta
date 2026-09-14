@@ -2,7 +2,7 @@
 ; RUN: %rosetta --input %S/control_flow.elf --output /dev/null --stop-after decoder --dump-input-instructions=true > %t
 ; RUN: FileCheck %s < %t
 
-; CHECK: cmp rax, rbx
+; CHECK: cmp %rbx, %rax
 ; CHECK-NEXT: jz
 ; CHECK-NEXT: jnz
 ; CHECK-NEXT: jl
@@ -29,8 +29,8 @@
 ; CHECK-NEXT: nop
 ; CHECK-NEXT: nop
 ; CHECK-NEXT: nop
-; CHECK-NEXT: push rax
-; CHECK-NEXT: pop rbx
+; CHECK-NEXT: push %rax
+; CHECK-NEXT: pop %rbx
 ; CHECK-NEXT: ret
 
 ; RUN: make clean
