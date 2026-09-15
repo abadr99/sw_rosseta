@@ -17,7 +17,7 @@ void ControlFlowGraph::AddBlock(const BasicBlock& block) {
 
 void ControlFlowGraph::AddEdge(Address from, Address to) {
   auto it = adjacency_.find(from);
-  if(it == adjacency_.end()) {
+  if (it == adjacency_.end()) {
     UNREACHABLE("AddEdge: Source block not found");
   }
   it->second.push_back(to);

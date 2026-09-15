@@ -11,7 +11,8 @@ void BasicBlock::AddInstruction(const Instruction& instruction) {
   if (instructions_.empty()) {
     start_address_ = const_cast<Instruction&>(instruction).Address();
   }
-  end_address_ = const_cast<Instruction&>(instruction).Address() + const_cast<Instruction&>(instruction).Size();
+  end_address_ = const_cast<Instruction&>(instruction).Address() 
+                + const_cast<Instruction&>(instruction).Size();
   instructions_.push_back(instruction);
 }
 

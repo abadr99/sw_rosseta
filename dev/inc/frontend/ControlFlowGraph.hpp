@@ -12,7 +12,7 @@ namespace frontend {
 namespace cfg {
 
 class ControlFlowGraph {
-public:
+ public:
   using Blocks = std::map<utils::Address, frontend::basicblock::BasicBlock>;
   using AdjacencyList = std::map<utils::Address, std::list<utils::Address>>;
 
@@ -28,7 +28,7 @@ public:
 
   const AdjacencyList& BlocksList() const;
 
-private:
+ private:
   Blocks blocks_;
   AdjacencyList adjacency_;
   utils::Address entry_address_ = 0;
