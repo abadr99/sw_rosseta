@@ -15,7 +15,7 @@ using rosetta::frontend::instruction::OperandType;
 using rosetta::utils::Address;
 
 CfgBuilder::CfgBuilder(const std::vector<Instruction>& instructions)
-  : ICfgBuilder(instructions) {
+  : instructions_(instructions) {
 }
 
 bool CfgBuilder::IsConditionalJump(const Instruction& instruction) const {
@@ -59,7 +59,7 @@ ControlFlowGraph CfgBuilder::Build() const {
   for (size_t i = 0; i < instructions_.size(); ++i) {
     const auto& inst = instructions_[i];
     bool is_branch = IsConditionalJump(inst) || IsUnconditionalJump(inst);
-    
+
     if (is_branch) {
       leaders.insert(GetJumpTarget(inst));
     }
@@ -74,9 +74,9 @@ ControlFlowGraph CfgBuilder::Build() const {
   for (size_t i = 0; i < instructions_.size(); ++i) {
     current.AddInstruction(instructions_[i]);
     bool is_last = (i + 1 == instructions_.size());
-    bool next_is_leader = !is_last && 
+    bool next_is_leader = !is_last &&
                           leaders.count(instructions_[i + 1].Address());
-    
+
     if (is_last || next_is_leader) {
       blocks[current.StartAddress()] = current;
       current = BasicBlock();

@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#include "frontend/CfgBuilderInterface.hpp"
 #include "frontend/ControlFlowGraph.hpp"
 #include "frontend/Instruction.hpp"
 #include "utils/Types.hpp"
@@ -14,12 +13,12 @@ namespace cfg {
 
 // Class that builds a ControlFlowGraph by splitting a decoded instruction
 // stream into basic blocks and wiring successor/predecessor edges
-class CfgBuilder : public ICfgBuilder {
+class CfgBuilder {
  public:
   explicit CfgBuilder(
       const std::vector<frontend::instruction::Instruction>& instructions);
   ~CfgBuilder() = default;
-  ControlFlowGraph Build() const override;
+  ControlFlowGraph Build() const;
 
  private:
   bool IsConditionalJump(
@@ -32,6 +31,8 @@ class CfgBuilder : public ICfgBuilder {
       const frontend::instruction::Instruction& instruction) const;
   utils::Address GetJumpTarget(
       const frontend::instruction::Instruction& instruction) const;
+
+  std::vector<frontend::instruction::Instruction> instructions_;
 };
 
 }  // namespace cfg

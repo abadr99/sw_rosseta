@@ -8,7 +8,6 @@ set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/RosettaTranslationEngine.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BasicBlock.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ControlFlowGraph.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilderInterface.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
 )
 
