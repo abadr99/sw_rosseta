@@ -6,6 +6,9 @@ set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ZydisDecoder.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/RosettaTranslationEngine.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BasicBlock.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ControlFlowGraph.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
@@ -17,7 +20,7 @@ target_include_directories(sw_rosseta_lib
 )
 
 target_link_libraries(sw_rosseta_lib
-      PUBLIC
+        PUBLIC
         Zydis
         LIEF::LIEF
 )
