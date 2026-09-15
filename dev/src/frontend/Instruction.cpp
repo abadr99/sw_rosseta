@@ -24,30 +24,30 @@ Instruction::Instruction(uint32_t machine_opcode,
 , assembly_text_(assembly_text)
 { /* EMPTY */ }
 
-uint32_t& Instruction::Opcode() {
+const uint32_t& Instruction::Opcode() const {
   return opcode_;
 }
 
-std::vector<InstructionOperand>& Instruction::Operands() {
+const std::vector<InstructionOperand>& Instruction::Operands() const {
   return operands_;
 }
 
-Address& Instruction::Address() {
+const Address& Instruction::Address() const {
   return address_;
 }
 
-uint32_t& Instruction::Size() {
+const uint32_t& Instruction::Size() const {
   return size_;
 }
 
-InstructionCategory& Instruction::Category() {
+const InstructionCategory& Instruction::Category() const {
   return category_;
 }
 
-std::string& Instruction::Mnemonic() {
+const std::string& Instruction::Mnemonic() const {
   return mnemonic_;
 }
 
-std::string& Instruction::AssemblyText() {
+const std::string& Instruction::AssemblyText() const {
   return assembly_text_;
 }

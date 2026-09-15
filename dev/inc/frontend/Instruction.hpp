@@ -55,13 +55,15 @@ class Instruction {
               InstructionCategory category,
               std::string mnemonic,
               std::string assembly_text);
-  uint32_t& Opcode();
-  std::vector<InstructionOperand>& Operands();
-  utils::Address& Address();
-  uint32_t& Size();
-  InstructionCategory& Category();
-  std::string& Mnemonic();
-  std::string& AssemblyText();
+              
+  const uint32_t& Opcode() const;
+  const std::vector<InstructionOperand>& Operands() const;
+  const utils::Address& Address() const;
+  const uint32_t& Size() const;
+  const InstructionCategory& Category() const;
+  const std::string& Mnemonic() const;
+  const std::string& AssemblyText() const;
+  
  private:
   uint32_t opcode_;
   std::vector<InstructionOperand> operands_;
