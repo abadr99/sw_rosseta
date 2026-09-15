@@ -92,25 +92,26 @@ int RosettaTranslationEngine::Load() {
 }
 
 int RosettaTranslationEngine::Decode() {
-    ZydisInstructionDecoder decoder;
+    std::unique_ptr<FrontEnd::decoder::IDecoder> decoder =
+        std::make_unique<ZydisInstructionDecoder>();
 
     uint64_t vma = section_->VirtualAddress;
     size_t offset = 0;
 
     while (offset < section_->Data.size()) {
-        const auto instruction = decoder.Decode(
+        const auto instruction = decoder->Decode(
             vma,
             section_->Data.data() + offset,
             section_->Data.size() - offset);
 
         if (!instruction || instruction->Size() == 0) {
-            std::cerr << "Error: Unable to decode instruction at VMA 0x"
-                      << std::hex << vma << "\n";
-            return 1;
+        std::cerr << "Error: Unable to decode instruction at VMA 0x"
+                    << std::hex << vma << "\n";
+        return 1;
         }
 
         if (cnf_.DumpInputInstructions) {
-            std::cout << instruction->AssemblyText() << "\n";
+        std::cout << instruction->AssemblyText() << "\n";
         }
 
         const auto length = instruction->Size();
