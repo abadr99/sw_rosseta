@@ -12,22 +12,22 @@ namespace cfg {
 
 class ControlFlowGraph {
  public:
-  using Blocks = std::map<frontend::utils::Address, frontend::basicblock::BasicBlock>;
+  using Blocks = std::map<utils::Address, frontend::basicblock::BasicBlock>;
 
   ControlFlowGraph() = default;
 
   void AddBlock(const frontend::basicblock::BasicBlock& block);
-  void SetEntryAddress(frontend::utils::Address entry_address);
+  void SetEntryAddress(utils::Address entry_address);
 
-  bool HasBlock(frontend::utils::Address address) const;
-  const frontend::basicblock::BasicBlock& Block(frontend::utils::Address address) const;
-  frontend::utils::Address EntryAddress() const;
+  bool HasBlock(utils::Address address) const;
+  const frontend::basicblock::BasicBlock& Block(utils::Address address) const;
+  utils::Address EntryAddress() const;
 
   const Blocks& BlocksList() const;
 
  private:
   Blocks blocks_;
-  frontend::utils::Address entry_address_ = 0;
+  utils::Address entry_address_ = 0;
 };
 
 }  // namespace cfg

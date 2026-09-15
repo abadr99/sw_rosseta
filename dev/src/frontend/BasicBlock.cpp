@@ -2,7 +2,7 @@
 
 using rosetta::frontend::basicblock::BasicBlock;
 using rosetta::frontend::instruction::Instruction;
-using rosetta::frontend::utils::Address;
+using rosetta::utils::Address;
 
 // NOTE: BasicBlock has no bulk constructor. The caller (e.g. CfgBuilder) is
 // responsible for calling AddInstruction() once per instruction, in address
@@ -27,7 +27,7 @@ Address BasicBlock::EndAddress() const {
   return end_address_;
 }
 
-const BasicBlock::Instructions& BasicBlock::Instructions() const {
+const BasicBlock::Instructions& BasicBlock::InstructionList() const {
   return instructions_;
 }
 

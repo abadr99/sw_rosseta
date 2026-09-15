@@ -14,26 +14,26 @@ namespace basicblock {
 class BasicBlock {
  public:
   using Instructions = std::vector<frontend::instruction::Instruction>;
-  using Addresses = std::vector<frontend::utils::Address>;
+  using Addresses = std::vector<utils::Address>;
 
   BasicBlock() = default;
 
   void AddInstruction(const frontend::instruction::Instruction& instruction);
   bool IsEmpty() const;
 
-  frontend::utils::Address StartAddress() const;
-  frontend::utils::Address EndAddress() const;
-  const Instructions& Instructions() const;
+  utils::Address StartAddress() const;
+  utils::Address EndAddress() const;
+  const Instructions& InstructionList() const;
 
-  void AddSuccessor(frontend::utils::Address successor_address);
-  void AddPredecessor(frontend::utils::Address predecessor_address);
+  void AddSuccessor(utils::Address successor_address);
+  void AddPredecessor(utils::Address predecessor_address);
   const Addresses& Successors() const;
   const Addresses& Predecessors() const;
 
  private:
   Instructions instructions_;
-  frontend::utils::Address start_address_ = 0;
-  frontend::utils::Address end_address_ = 0;
+  utils::Address start_address_ = 0;
+  utils::Address end_address_ = 0;
   Addresses successors_;
   Addresses predecessors_;
 };

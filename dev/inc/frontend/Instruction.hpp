@@ -17,6 +17,8 @@ enum class InstructionCategory {
   kCondControlFlow,
   kUnCondControlFlow,
   kDataTransfer,
+  kCall,
+  kReturn,
 };
 
 enum class OperandType {

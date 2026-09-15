@@ -3,7 +3,7 @@
 
 using rosetta::frontend::cfg::ControlFlowGraph;
 using rosetta::frontend::basicblock::BasicBlock;
-using rosetta::frontend::utils::Address;
+using rosetta::utils::Address;
 
 // NOTE: Caller (e.g. CfgBuilder) is responsible for calling AddBlock() once
 // per basic block to populate the graph, and for calling SetEntryAddress()

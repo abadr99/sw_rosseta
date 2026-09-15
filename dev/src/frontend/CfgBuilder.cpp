@@ -2,68 +2,49 @@
 
 #include <map>
 #include <set>
-
 #include <vector>
 
 #include "utils/Macros.hpp"
 
-using rosetta::frontend::cfg::CfgBuilder;
 using rosetta::frontend::basicblock::BasicBlock;
+using rosetta::frontend::cfg::CfgBuilder;
 using rosetta::frontend::cfg::ControlFlowGraph;
-using rosetta::frontend::decode::X86Instruction;
-using rosetta::frontend::utils::Address;
+using rosetta::frontend::instruction::Instruction;
+using rosetta::frontend::instruction::InstructionCategory;
+using rosetta::frontend::instruction::OperandType;
+using rosetta::utils::Address;
 
-CfgBuilder::CfgBuilder(const std::vector<X86Instruction>& instructions)
+CfgBuilder::CfgBuilder(const std::vector<Instruction>& instructions)
   : ICfgBuilder(instructions) {
 }
 
-bool CfgBuilder::IsConditionalJump(ZydisMnemonic mnemonic) const {
-  switch (mnemonic) {
-    case ZYDIS_MNEMONIC_JB:
-    case ZYDIS_MNEMONIC_JBE:
-    case ZYDIS_MNEMONIC_JCXZ:
-    case ZYDIS_MNEMONIC_JECXZ:
-    case ZYDIS_MNEMONIC_JKNZD:
-    case ZYDIS_MNEMONIC_JKZD:
-    case ZYDIS_MNEMONIC_JL:
-    case ZYDIS_MNEMONIC_JLE:
-    case ZYDIS_MNEMONIC_JNB:
-    case ZYDIS_MNEMONIC_JNBE:
-    case ZYDIS_MNEMONIC_JNL:
-    case ZYDIS_MNEMONIC_JNLE:
-    case ZYDIS_MNEMONIC_JNO:
-    case ZYDIS_MNEMONIC_JNP:
-    case ZYDIS_MNEMONIC_JNS:
-    case ZYDIS_MNEMONIC_JNZ:
-    case ZYDIS_MNEMONIC_JO:
-    case ZYDIS_MNEMONIC_JP:
-    case ZYDIS_MNEMONIC_JRCXZ:
-    case ZYDIS_MNEMONIC_JS:
-    case ZYDIS_MNEMONIC_JZ:
-      return true;
-    default:
-      return false;
+bool CfgBuilder::IsConditionalJump(const Instruction& instruction) const {
+  return instruction.Category() == InstructionCategory::kCondControlFlow;
+}
+
+bool CfgBuilder::IsUnconditionalJump(const Instruction& instruction) const {
+  return instruction.Category() == InstructionCategory::kUnCondControlFlow;
+}
+
+bool CfgBuilder::IsCall(const Instruction& instruction) const {
+  return instruction.Category() == InstructionCategory::kCall;
+}
+
+bool CfgBuilder::IsReturn(const Instruction& instruction) const {
+  return instruction.Category() == InstructionCategory::kReturn;
+}
+
+Address CfgBuilder::GetJumpTarget(const Instruction& instruction) const {
+  const auto& operands = instruction.Operands();
+  if (operands.empty()) {
+    return 0;
   }
-}
 
-bool CfgBuilder::IsUnconditionalJump(ZydisMnemonic mnemonic) const {
-  return mnemonic == ZYDIS_MNEMONIC_JMP;
-}
-
-bool CfgBuilder::IsCall(ZydisMnemonic mnemonic) const {
-  return mnemonic == ZYDIS_MNEMONIC_CALL;
-}
-
-bool CfgBuilder::IsReturn(ZydisMnemonic mnemonic) const {
-  return mnemonic == ZYDIS_MNEMONIC_RET;
-}
-
-Address CfgBuilder::GetJumpTarget(const X86Instruction& instruction) const {
-  const ZydisDecodedOperand& operand = instruction.get_operand(0);
-  if (operand.type == ZYDIS_OPERAND_TYPE_IMMEDIATE && operand.imm.is_relative) {
-    return instruction.get_address() + instruction.get_length() + operand.imm.value.s;
+  const auto& op = operands.front();
+  if (op.Type == OperandType::kImmediate) {
+    return instruction.Address() + instruction.Size() + op.Imm;
   }
-  return operand.imm.value.u;
+  return 0;
 }
 
 ControlFlowGraph CfgBuilder::Build() const {
@@ -74,15 +55,16 @@ ControlFlowGraph CfgBuilder::Build() const {
 
   // Find every address where a new block must start: the entry point,
   // every jump target, and every instruction right after a branch/return.
-  std::set<Address> leaders = {instructions_.front().get_address()};
+  std::set<Address> leaders = {instructions_.front().Address()};
   for (size_t i = 0; i < instructions_.size(); ++i) {
-    ZydisMnemonic mnemonic = instructions_[i].get_mnemonic();
-    bool is_branch = IsConditionalJump(mnemonic) || IsUnconditionalJump(mnemonic);
+    const auto& inst = instructions_[i];
+    bool is_branch = IsConditionalJump(inst) || IsUnconditionalJump(inst);
+    
     if (is_branch) {
-      leaders.insert(GetJumpTarget(instructions_[i]));
+      leaders.insert(GetJumpTarget(inst));
     }
-    if ((is_branch || IsReturn(mnemonic)) && i + 1 < instructions_.size()) {
-      leaders.insert(instructions_[i + 1].get_address());
+    if ((is_branch || IsReturn(inst)) && i + 1 < instructions_.size()) {
+      leaders.insert(instructions_[i + 1].Address());
     }
   }
 
@@ -92,7 +74,9 @@ ControlFlowGraph CfgBuilder::Build() const {
   for (size_t i = 0; i < instructions_.size(); ++i) {
     current.AddInstruction(instructions_[i]);
     bool is_last = (i + 1 == instructions_.size());
-    bool next_is_leader = !is_last && leaders.count(instructions_[i + 1].get_address());
+    bool next_is_leader = !is_last && 
+                          leaders.count(instructions_[i + 1].Address());
+    
     if (is_last || next_is_leader) {
       blocks[current.StartAddress()] = current;
       current = BasicBlock();
@@ -101,11 +85,10 @@ ControlFlowGraph CfgBuilder::Build() const {
 
   // Wire successor/predecessor edges based on each block's last instruction.
   for (auto& [start, block] : blocks) {
-    const auto& last = block.Instructions().back();
-    ZydisMnemonic mnemonic = last.get_mnemonic();
-    Address fallthrough = last.get_address() + last.get_length();
+    const auto& last = block.InstructionList().back();
+    Address fallthrough = last.Address() + last.Size();
 
-    if (IsConditionalJump(mnemonic)) {
+    if (IsConditionalJump(last)) {
       Address target = GetJumpTarget(last);
       if (blocks.count(target)) {
         block.AddSuccessor(target);
@@ -115,13 +98,13 @@ ControlFlowGraph CfgBuilder::Build() const {
         block.AddSuccessor(fallthrough);
         blocks[fallthrough].AddPredecessor(start);
       }
-    } else if (IsUnconditionalJump(mnemonic)) {
+    } else if (IsUnconditionalJump(last)) {
       Address target = GetJumpTarget(last);
       if (blocks.count(target)) {
         block.AddSuccessor(target);
         blocks[target].AddPredecessor(start);
       }
-    } else if (!IsReturn(mnemonic) && blocks.count(fallthrough)) {
+    } else if (!IsReturn(last) && blocks.count(fallthrough)) {
       block.AddSuccessor(fallthrough);
       blocks[fallthrough].AddPredecessor(start);
     }
@@ -130,6 +113,6 @@ ControlFlowGraph CfgBuilder::Build() const {
   for (const auto& [start, block] : blocks) {
     graph.AddBlock(block);
   }
-  graph.SetEntryAddress(instructions_.front().get_address());
+  graph.SetEntryAddress(instructions_.front().Address());
   return graph;
 }

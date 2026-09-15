@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "frontend/Instruction.hpp"
 #include "frontend/CfgBuilderInterface.hpp"
 #include "frontend/ControlFlowGraph.hpp"
+#include "frontend/Instruction.hpp"
 #include "utils/Types.hpp"
 
 namespace rosetta {
@@ -16,17 +16,22 @@ namespace cfg {
 // stream into basic blocks and wiring successor/predecessor edges
 class CfgBuilder : public ICfgBuilder {
  public:
-  explicit CfgBuilder(const std::vector<frontend::decode::X86Instruction>& instructions);
+  explicit CfgBuilder(
+      const std::vector<frontend::instruction::Instruction>& instructions);
   ~CfgBuilder() = default;
   ControlFlowGraph Build() const override;
 
  private:
-  bool IsConditionalJump(ZydisMnemonic mnemonic) const;
-  bool IsUnconditionalJump(ZydisMnemonic mnemonic) const;
-  bool IsCall(ZydisMnemonic mnemonic) const;
-  bool IsReturn(ZydisMnemonic mnemonic) const;
-  frontend::utils::Address GetJumpTarget(
-      const frontend::decode::X86Instruction& instruction) const;
+  bool IsConditionalJump(
+      const frontend::instruction::Instruction& instruction) const;
+  bool IsUnconditionalJump(
+      const frontend::instruction::Instruction& instruction) const;
+  bool IsCall(
+      const frontend::instruction::Instruction& instruction) const;
+  bool IsReturn(
+      const frontend::instruction::Instruction& instruction) const;
+  utils::Address GetJumpTarget(
+      const frontend::instruction::Instruction& instruction) const;
 };
 
 }  // namespace cfg
