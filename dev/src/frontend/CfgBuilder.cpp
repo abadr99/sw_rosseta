@@ -113,6 +113,11 @@ ControlFlowGraph CfgBuilder::Build() const {
   for (const auto& [start, block] : blocks) {
     graph.AddBlock(block);
   }
+  for (const auto& [start, block] : blocks) {
+    for (Address successor : block.Successors()) {
+      graph.AddEdge(start, successor);
+    }
+  }
   graph.SetEntryAddress(instructions_.front().Address());
   return graph;
 }
