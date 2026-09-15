@@ -106,7 +106,7 @@ TEST(ZydisInstructionDecoderTest, DecodeUnCondControlFlow_Ret) {
   Instruction& ir = *decoded;
 
   EXPECT_EQ(ir.Mnemonic(), "ret");
-  EXPECT_EQ(ir.Category(), InstructionCategory::kUnCondControlFlow);
+  EXPECT_EQ(ir.Category(), InstructionCategory::kReturn);
   // `ret` implicitly uses the stack, but has 0 explicitly visible operands in Zydis formatting
 }
 
