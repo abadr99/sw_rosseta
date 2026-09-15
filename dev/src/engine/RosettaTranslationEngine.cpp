@@ -92,34 +92,39 @@ int RosettaTranslationEngine::Load() {
 }
 
 int RosettaTranslationEngine::Decode() {
-    ZydisInstructionDecoder decoder;
+  if (!section_.has_value()) {
+    std::cerr << "Error: No executable section loaded before decode.\n";
+    return 1;
+  }
 
-    uint64_t vma = section_->VirtualAddress;
-    size_t offset = 0;
+  ZydisInstructionDecoder decoder;
 
-    while (offset < section_->Data.size()) {
-        const auto instruction = decoder.Decode(
-            vma,
-            section_->Data.data() + offset,
-            section_->Data.size() - offset);
+  uint64_t vma = section_->VirtualAddress;
+  size_t offset = 0;
 
-        if (!instruction || instruction->Size() == 0) {
-            std::cerr << "Error: Unable to decode instruction at VMA 0x"
-                      << std::hex << vma << "\n";
-            return 1;
-        }
+  while (offset < section_->Data.size()) {
+    const auto instruction = decoder.Decode(
+        vma,
+        section_->Data.data() + offset,
+        section_->Data.size() - offset);
 
-        if (cnf_.DumpInputInstructions) {
-            std::cout << instruction->AssemblyText() << "\n";
-        }
-
-        const auto length = instruction->Size();
-
-        offset += length;
-        vma += length;
+    if (!instruction || instruction->Size() == 0) {
+      std::cerr << "Error: Unable to decode instruction at VMA 0x"
+                 << std::hex << vma << "\n";
+      return 1;
     }
 
-    return 0;
+    if (cnf_.DumpInputInstructions) {
+      std::cout << instruction->AssemblyText() << "\n";
+    }
+
+    const auto length = instruction->Size();
+
+    offset += length;
+    vma += length;
+  }
+
+  return 0;
 }
 
 int RosettaTranslationEngine::Run(int argc, char* argv[]) {
