@@ -1,4 +1,4 @@
-#include "middleend/CfgBuilder.hpp"
+#include "frontend/CfgBuilder.hpp"
 
 #include <map>
 #include <set>
@@ -7,9 +7,9 @@
 
 #include "utils/Macros.hpp"
 
-using rosetta::middleend::cfg::CfgBuilder;
-using rosetta::middleend::basicblock::BasicBlock;
-using rosetta::middleend::cfg::ControlFlowGraph;
+using rosetta::frontend::cfg::CfgBuilder;
+using rosetta::frontend::basicblock::BasicBlock;
+using rosetta::frontend::cfg::ControlFlowGraph;
 using rosetta::frontend::decode::X86Instruction;
 using rosetta::frontend::utils::Address;
 
@@ -94,14 +94,14 @@ ControlFlowGraph CfgBuilder::Build() const {
     bool is_last = (i + 1 == instructions_.size());
     bool next_is_leader = !is_last && leaders.count(instructions_[i + 1].get_address());
     if (is_last || next_is_leader) {
-      blocks[current.GetStartAddress()] = current;
+      blocks[current.StartAddress()] = current;
       current = BasicBlock();
     }
   }
 
   // Wire successor/predecessor edges based on each block's last instruction.
   for (auto& [start, block] : blocks) {
-    const X86Instruction& last = block.GetInstructions().back();
+    const auto& last = block.Instructions().back();
     ZydisMnemonic mnemonic = last.get_mnemonic();
     Address fallthrough = last.get_address() + last.get_length();
 

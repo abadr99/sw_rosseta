@@ -1,13 +1,15 @@
 set(CORE_SOURCES
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Decoder.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/BasicBlock.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/ControlFlowGraph.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/CfgBuilderInterface.cpp"
-        "${CMAKE_CURRENT_SOURCE_DIR}/src/middleend/CfgBuilder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/DecoderInterface.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ZydisDecoder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/RosettaTranslationEngine.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BasicBlock.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ControlFlowGraph.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilderInterface.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
@@ -23,6 +25,11 @@ target_link_libraries(sw_rosseta_lib
         Zydis
         LIEF::LIEF
 )
+
+# LIEF's cryptography parser requires the Windows Socket API
+if(WIN32)
+    target_link_libraries(sw_rosseta_lib PUBLIC ws2_32)
+endif()
 
 add_executable(rosetta src/main.cpp)
 

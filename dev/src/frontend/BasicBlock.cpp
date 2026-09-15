@@ -1,17 +1,17 @@
-#include <middleend/BasicBlock.hpp>
+#include "frontend/BasicBlock.hpp"
 
-using rosetta::middleend::basicblock::BasicBlock;
-using rosetta::frontend::decode::X86Instruction;
+using rosetta::frontend::basicblock::BasicBlock;
+using rosetta::frontend::instruction::Instruction;
 using rosetta::frontend::utils::Address;
 
 // NOTE: BasicBlock has no bulk constructor. The caller (e.g. CfgBuilder) is
 // responsible for calling AddInstruction() once per instruction, in address
 // order, to populate the block.
-void BasicBlock::AddInstruction(const X86Instruction& instruction) {
+void BasicBlock::AddInstruction(const Instruction& instruction) {
   if (instructions_.empty()) {
-    start_address_ = instruction.get_address();
+    start_address_ = const_cast<Instruction&>(instruction).Address();
   }
-  end_address_ = instruction.get_address() + instruction.get_length();
+  end_address_ = const_cast<Instruction&>(instruction).Address() + const_cast<Instruction&>(instruction).Size();
   instructions_.push_back(instruction);
 }
 
@@ -19,15 +19,15 @@ bool BasicBlock::IsEmpty() const {
   return instructions_.empty();
 }
 
-Address BasicBlock::GetStartAddress() const {
+Address BasicBlock::StartAddress() const {
   return start_address_;
 }
 
-Address BasicBlock::GetEndAddress() const {
+Address BasicBlock::EndAddress() const {
   return end_address_;
 }
 
-const BasicBlock::Instructions& BasicBlock::GetInstructions() const {
+const BasicBlock::Instructions& BasicBlock::Instructions() const {
   return instructions_;
 }
 
@@ -39,10 +39,10 @@ void BasicBlock::AddPredecessor(Address predecessor_address) {
   predecessors_.push_back(predecessor_address);
 }
 
-const BasicBlock::Addresses& BasicBlock::GetSuccessors() const {
+const BasicBlock::Addresses& BasicBlock::Successors() const {
   return successors_;
 }
 
-const BasicBlock::Addresses& BasicBlock::GetPredecessors() const {
+const BasicBlock::Addresses& BasicBlock::Predecessors() const {
   return predecessors_;
 }

@@ -21,6 +21,7 @@ struct Configurations {
     std::string InputFile;
     std::string OutputFile;
     PipeLineStage PipelineStage;
+    bool DumpInputInstructions{false};
 };
 
 class OptionParserInterface {

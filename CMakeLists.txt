@@ -51,4 +51,5 @@ find_package(LIEF ${LIEF_SDK_VERSION} REQUIRED COMPONENTS STATIC PATHS "${LIEF_S
 enable_testing()
 
 add_subdirectory(dev)
-add_subdirectory(tests)
+add_subdirectory(tests/unit_tests)
+

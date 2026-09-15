@@ -1,15 +1,15 @@
-#ifndef DEV_INC_MIDDLEEND_CFGBUILDER_HPP_
-#define DEV_INC_MIDDLEEND_CFGBUILDER_HPP_
+#ifndef DEV_INC_FRONTEND_CFGBUILDER_HPP_
+#define DEV_INC_FRONTEND_CFGBUILDER_HPP_
 
 #include <vector>
 
 #include "frontend/Instruction.hpp"
-#include "middleend/CfgBuilderInterface.hpp"
-#include "middleend/ControlFlowGraph.hpp"
+#include "frontend/CfgBuilderInterface.hpp"
+#include "frontend/ControlFlowGraph.hpp"
 #include "utils/Types.hpp"
 
 namespace rosetta {
-namespace middleend {
+namespace frontend {
 namespace cfg {
 
 // Class that builds a ControlFlowGraph by splitting a decoded instruction
@@ -30,7 +30,7 @@ class CfgBuilder : public ICfgBuilder {
 };
 
 }  // namespace cfg
-}  // namespace middleend
+}  // namespace frontend
 }  // namespace rosetta
 
-#endif  // DEV_INC_MIDDLEEND_CFGBUILDER_HPP_
+#endif  // DEV_INC_FRONTEND_CFGBUILDER_HPP_

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef DEV_INC_FRONTEND_LIEFBINARYLOADER_HPP_
+#define DEV_INC_FRONTEND_LIEFBINARYLOADER_HPP_
 
 #include <memory>
 
@@ -31,3 +32,5 @@ class LiefBinaryParser : public IBinaryParser {
 }  // namespace loader
 }  // namespace frontend
 }  // namespace rosetta
+
+#endif  // DEV_INC_FRONTEND_LIEFBINARYLOADER_HPP_
