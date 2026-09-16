@@ -149,7 +149,6 @@ std::string CfgBuilder::ToDot(const ControlFlowGraph& graph) const {
       out << "  \"0x" << std::hex << address << "\" -> \"0x" << std::hex << successor << "\";\n";
     }
   }
- 
   out << "}\n";
   return out.str();
 }
