@@ -133,20 +133,56 @@ std::string CfgBuilder::ToDot(const ControlFlowGraph& graph) const {
 
   int block_index = 0;
   for (const auto& [address, successors] : graph.BlocksList()) {
-    const BasicBlock& block = graph.Block(address);
+    const auto& block = graph.Block(address);
+    const auto& insts = block.InstructionList();
     std::ostringstream label;
-    label << "Block " << block_index++ << " (0x" << std::hex << address << "):\\l";
-    for (const auto& inst : block.InstructionList()) {
-      label << inst.AssemblyText() << "\\l";
+
+    label << "<b>Block " << block_index++ << " (0x" << std::hex << address << "):</b><br align=\"left\"/>";
+
+    if (insts.size() <= 6) {
+      for (const auto& inst : insts) {
+        label << inst.AssemblyText() << "<br align=\"left\"/>";
+      }
+    } else {
+      for (size_t i = 0; i < 3; ++i) {
+        label << insts[i].AssemblyText() << "<br align=\"left\"/>";
+      }
+
+      size_t omitted = insts.size() - 5;
+      label << "<font color=\"#888888\"><i>" << omitted << " instructions omitted</i></font><br align=\"center\"/>";
+
+      for (size_t i = insts.size() - 2; i < insts.size(); ++i) {
+        label << insts[i].AssemblyText() << "<br align=\"left\"/>";
+      }
     }
 
-    out << "  \"0x" << std::hex << address << "\" [label=\"" << label.str() << "\"";
-    out << "];\n";
+    out << "  \"0x" << std::hex << address << "\" [label=<" << label.str() << ">];\n";
   }
 
-    for (const auto& [address, successors] : graph.BlocksList()) {
+  for (const auto& [address, successors] : graph.BlocksList()) {
+    const auto& block = graph.Block(address);
+    const auto& last = block.InstructionList().back();
+
     for (Address successor : successors) {
-      out << "  \"0x" << std::hex << address << "\" -> \"0x" << std::hex << successor << "\";\n";
+      std::string reason;
+      std::string extra_attrs;
+      if (IsConditionalJump(last)) {
+        if (successor == GetJumpTarget(last)) {
+          reason = "true";
+          extra_attrs = ", color=green, fontcolor=green";
+        } else {
+          reason = "false";
+          extra_attrs = ", color=red, fontcolor=red";
+        }
+      } else if (IsUnconditionalJump(last)) {
+        reason = "jump";
+        extra_attrs = ", color=blue, fontcolor=blue";
+      } else {
+        reason = "fallthrough";
+      }
+
+      out << "  \"0x" << std::hex << address << "\" -> \"0x" << std::hex << successor
+          << "\" [label=\"" << reason << "\"" << extra_attrs << "];\n";
     }
   }
   out << "}\n";
