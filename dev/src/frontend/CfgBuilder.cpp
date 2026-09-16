@@ -137,7 +137,8 @@ std::string CfgBuilder::ToDot(const ControlFlowGraph& graph) const {
     const auto& insts = block.InstructionList();
     std::ostringstream label;
 
-    label << "<b>Block " << block_index++ << " (0x" << std::hex << address << "):</b><br align=\"left\"/>";
+    label << "<b>Block " << block_index++ << 
+      " (0x" << std::hex << address << "):</b><br align=\"left\"/>";
 
     if (insts.size() <= 6) {
       for (const auto& inst : insts) {
