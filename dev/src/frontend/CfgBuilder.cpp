@@ -150,7 +150,8 @@ std::string CfgBuilder::ToDot(const ControlFlowGraph& graph) const {
       }
 
       size_t omitted = insts.size() - 5;
-      label << "<font color=\"#888888\"><i>" << omitted << " instructions omitted</i></font><br align=\"center\"/>";
+      label << "<font color=\"#888888\"><i>" << 
+        omitted << " instructions omitted</i></font><br align=\"center\"/>";
 
       for (size_t i = insts.size() - 2; i < insts.size(); ++i) {
         label << insts[i].AssemblyText() << "<br align=\"left\"/>";
