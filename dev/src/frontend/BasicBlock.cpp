@@ -9,10 +9,9 @@ using rosetta::utils::Address;
 // order, to populate the block.
 void BasicBlock::AddInstruction(const Instruction& instruction) {
   if (instructions_.empty()) {
-    start_address_ = const_cast<Instruction&>(instruction).Address();
+    start_address_ = instruction.Address();
   }
-  end_address_ = const_cast<Instruction&>(instruction).Address() 
-                + const_cast<Instruction&>(instruction).Size();
+  end_address_ = instruction.Address() + instruction.Size();
   instructions_.push_back(instruction);
 }
 

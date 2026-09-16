@@ -2,9 +2,13 @@
 
 #include <map>
 #include <set>
+#include <sstream>
 #include <vector>
+#include <string>
 
+#include "frontend/BasicBlock.hpp"
 #include "utils/Macros.hpp"
+#include "utils/Types.hpp"
 
 using rosetta::frontend::basicblock::BasicBlock;
 using rosetta::frontend::cfg::CfgBuilder;
@@ -120,4 +124,32 @@ ControlFlowGraph CfgBuilder::Build() const {
   }
   graph.SetEntryAddress(instructions_.front().Address());
   return graph;
+}
+
+std::string CfgBuilder::ToDot(const ControlFlowGraph& graph) const {
+  std::ostringstream out;
+  out << "digraph CFG {\n";
+  out << "  node [shape=box, fontname=\"monospace\", fontsize=10];\n";
+
+  int block_index = 0;
+  for (const auto& [address, successors] : graph.BlocksList()) {
+    const BasicBlock& block = graph.Block(address);
+    std::ostringstream label;
+    label << "Block " << block_index++ << " (0x" << std::hex << address << "):\\l";
+    for (const auto& inst : block.InstructionList()) {
+      label << inst.AssemblyText() << "\\l";
+    }
+
+    out << "  \"0x" << std::hex << address << "\" [label=\"" << label.str() << "\"";
+    out << "];\n";
+  }
+
+    for (const auto& [address, successors] : graph.BlocksList()) {
+    for (Address successor : successors) {
+      out << "  \"0x" << std::hex << address << "\" -> \"0x" << std::hex << successor << "\";\n";
+    }
+  }
+ 
+  out << "}\n";
+  return out.str();
 }

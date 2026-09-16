@@ -2,6 +2,7 @@
 #define DEV_INC_FRONTEND_CFGBUILDER_HPP_
 
 #include <vector>
+#include <string>
 
 #include "frontend/ControlFlowGraph.hpp"
 #include "frontend/Instruction.hpp"
@@ -19,6 +20,7 @@ class CfgBuilder {
       const std::vector<frontend::instruction::Instruction>& instructions);
   ~CfgBuilder() = default;
   ControlFlowGraph Build() const;
+  std::string ToDot(const ControlFlowGraph& graph) const;
 
  private:
   bool IsConditionalJump(
