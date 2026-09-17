@@ -2,7 +2,9 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "frontend/Instruction.hpp"
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/LiefBinaryLoader.hpp"
 #include "frontend/ZydisDecoder.hpp"
@@ -92,35 +94,29 @@ int RosettaTranslationEngine::Load() {
 }
 
 int RosettaTranslationEngine::Decode() {
-    std::unique_ptr<FrontEnd::decoder::IDecoder> decoder =
-        std::make_unique<ZydisInstructionDecoder>();
+  std::unique_ptr<FrontEnd::decoder::IDecoder> decoder =
+      std::make_unique<ZydisInstructionDecoder>();
 
-    uint64_t vma = section_->VirtualAddress;
-    size_t offset = 0;
+  instructions_ = decoder->DecodeAll(
+      section_->VirtualAddress, section_->Data.data(), section_->Data.size());
 
-    while (offset < section_->Data.size()) {
-        const auto instruction = decoder->Decode(
-            vma,
-            section_->Data.data() + offset,
-            section_->Data.size() - offset);
+  const uint64_t decoded_bytes = instructions_.empty() ? 0 :
+      (instructions_.back().Address() + instructions_.back().Size()
+       - section_->VirtualAddress);
 
-        if (!instruction || instruction->Size() == 0) {
-        std::cerr << "Error: Unable to decode instruction at VMA 0x"
-                    << std::hex << vma << "\n";
-        return 1;
-        }
+  if (decoded_bytes != section_->Data.size()) {
+    std::cerr << "Error: Unable to decode instruction at VMA 0x"
+               << std::hex << (section_->VirtualAddress + decoded_bytes) << "\n";
+    return 1;
+  }
 
-        if (cnf_.DumpInputInstructions) {
-        std::cout << instruction->AssemblyText() << "\n";
-        }
-
-        const auto length = instruction->Size();
-
-        offset += length;
-        vma += length;
+  if (cnf_.DumpInputInstructions) {
+    for (const auto& instruction : instructions_) {
+      std::cout << instruction.AssemblyText() << "\n";
     }
+  }
 
-    return 0;
+  return 0;
 }
 
 int RosettaTranslationEngine::Run(int argc, char* argv[]) {

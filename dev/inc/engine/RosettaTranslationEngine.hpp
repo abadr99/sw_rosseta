@@ -1,7 +1,9 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
+#include "frontend/Instruction.hpp"
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/OptionParserInterface.hpp"
 
@@ -22,4 +24,5 @@ class RosettaTranslationEngine {
 
     rosetta::frontend::Configurations cnf_;
     std::optional<rosetta::frontend::loader::BinarySection> section_;
+    std::vector<rosetta::frontend::instruction::Instruction> instructions_;
 };
