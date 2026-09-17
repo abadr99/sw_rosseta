@@ -1,11 +1,12 @@
-#include "frontend/ZydisDecoder.hpp"
-
 #include <Zydis/Zydis.h>
 
 #include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include "frontend/ZydisDecoder.hpp"
+#include "utils/Macros.hpp"
 
 using namespace rosetta::frontend;  // NOLINT
 using namespace rosetta::frontend::decoder;  // NOLINT
@@ -16,6 +17,7 @@ using rosetta::frontend::instruction::OperandType;
 
 // Changes ZydisRegister type to integer with conventional order of regs
 // starting from 1 up until 16.
+// TODO(@abdelrhmanatta): What will happen if we need to use 8/16/32 regs (eg. eax)
 uint32_t ZydisInstructionDecoder::RegisterToNumber(ZydisRegister reg) const {
   const ZydisRegister widened =
       ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, reg);
@@ -60,7 +62,7 @@ InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand&
       op.Mem.Offset = static_cast<uint64_t>(z_op.mem.disp.value);
       break;
     default:
-      op.Type = OperandType::kUnkown;
+      UNREACHABLE("TYPE NOT SUPPORTED");
       break;
   }
   return op;
@@ -137,43 +139,16 @@ std::vector<Instruction> ZydisInstructionDecoder::DecodeAll(
     return instructions;
   }
 
-  ZydisDecoder z_decoder;
-  ZydisFormatter z_formatter;
-  ZydisDecoderInit(&z_decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
-  ZydisFormatterInit(&z_formatter, ZYDIS_FORMATTER_STYLE_ATT);
-
   utils::Size offset = 0;
   while (offset < length) {
-    ZydisDecodedInstruction instruction;
-    ZydisDecodedOperand z_ops[ZYDIS_MAX_OPERAND_COUNT];
-
-    if (!ZYAN_SUCCESS(ZydisDecoderDecodeFull(&z_decoder, buffer + offset,
-                                             length - offset, &instruction,
-                                             z_ops))) {
+    auto instruction = Decode(vma + offset, buffer + offset, length - offset);
+    if (!instruction || instruction->Size() == 0) {
       break;
     }
 
-    const utils::Address cur_vma = vma + offset;
-    char formatted[256];
-    if (!ZYAN_SUCCESS(ZydisFormatterFormatInstruction(
-            &z_formatter, &instruction, z_ops,
-            instruction.operand_count_visible, formatted, sizeof(formatted),
-            cur_vma, ZYAN_NULL))) {
-      break;
-    }
-
-    std::vector<InstructionOperand> operands;
-    for (uint8_t i = 0; i < instruction.operand_count_visible; ++i) {
-      operands.push_back(ToOperand(z_ops[i]));
-    }
-
-    const InstructionCategory category = ToCategory(instruction.meta.category);
-
-    instructions.emplace_back(
-        instruction.opcode, std::move(operands), cur_vma, instruction.length,
-        category, ZydisMnemonicGetString(instruction.mnemonic), formatted);
-
-    offset += instruction.length;
+    const uint32_t inst_size = instruction->Size();
+    instructions.push_back(std::move(*instruction));
+    offset += inst_size;
   }
 
   return instructions;

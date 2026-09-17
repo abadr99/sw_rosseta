@@ -14,11 +14,11 @@ namespace decoder {
 
 class IDecoder {
  public:
-  virtual ~IDecoder();
+  virtual ~IDecoder() = default;
   virtual std::unique_ptr<instruction::Instruction> Decode(
     utils::Address vma, const uint8_t* buffer, utils::Size length) const = 0;
   virtual std::vector<instruction::Instruction> DecodeAll(
-    utils::Address vma, const uint8_t* buffer, utils::Size length) const;
+    utils::Address vma, const uint8_t* buffer, utils::Size length) const = 0;
 };
 
 }  // namespace decoder

@@ -18,11 +18,10 @@ class RosettaTranslationEngine {
     void ParseConfigurations(int argc, char* argv[]);
     int RunFrontEnd();
     int Load();
-    int Decode();
+    std::vector<rosetta::frontend::instruction::Instruction> Decode();
     int Optimize();
     int Generate();
 
     rosetta::frontend::Configurations cnf_;
     std::optional<rosetta::frontend::loader::BinarySection> section_;
-    std::vector<rosetta::frontend::instruction::Instruction> instructions_;
 };
