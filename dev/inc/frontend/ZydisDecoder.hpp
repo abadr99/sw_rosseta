@@ -18,6 +18,8 @@ class ZydisInstructionDecoder : public IDecoder {
   ~ZydisInstructionDecoder() = default;
   std::unique_ptr<instruction::Instruction> Decode(
     utils::Address vma, const uint8_t* buffer, utils::Size length) const override;
+  std::vector<instruction::Instruction> DecodeAll(
+    utils::Address vma, const uint8_t* buffer, utils::Size length) const override;
  private:
   instruction::InstructionOperand ToOperand(const ZydisDecodedOperand& z_op) const;
   uint32_t RegisterToNumber(ZydisRegister reg) const;

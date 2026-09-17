@@ -128,3 +128,53 @@ std::unique_ptr<Instruction> ZydisInstructionDecoder::Decode(
       instruction.opcode, std::move(operands), vma, instruction.length,
       category, ZydisMnemonicGetString(instruction.mnemonic), formatted);
 }
+
+std::vector<Instruction> ZydisInstructionDecoder::DecodeAll(
+    utils::Address vma, const uint8_t* buffer, utils::Size length) const {
+  std::vector<Instruction> instructions;
+
+  if (!buffer || !length) {
+    return instructions;
+  }
+
+  ZydisDecoder z_decoder;
+  ZydisFormatter z_formatter;
+  ZydisDecoderInit(&z_decoder, ZYDIS_MACHINE_MODE_LONG_64, ZYDIS_STACK_WIDTH_64);
+  ZydisFormatterInit(&z_formatter, ZYDIS_FORMATTER_STYLE_ATT);
+
+  utils::Size offset = 0;
+  while (offset < length) {
+    ZydisDecodedInstruction instruction;
+    ZydisDecodedOperand z_ops[ZYDIS_MAX_OPERAND_COUNT];
+
+    if (!ZYAN_SUCCESS(ZydisDecoderDecodeFull(&z_decoder, buffer + offset,
+                                             length - offset, &instruction,
+                                             z_ops))) {
+      break;
+    }
+
+    const utils::Address cur_vma = vma + offset;
+    char formatted[256];
+    if (!ZYAN_SUCCESS(ZydisFormatterFormatInstruction(
+            &z_formatter, &instruction, z_ops,
+            instruction.operand_count_visible, formatted, sizeof(formatted),
+            cur_vma, ZYAN_NULL))) {
+      break;
+    }
+
+    std::vector<InstructionOperand> operands;
+    for (uint8_t i = 0; i < instruction.operand_count_visible; ++i) {
+      operands.push_back(ToOperand(z_ops[i]));
+    }
+
+    const InstructionCategory category = ToCategory(instruction.meta.category);
+
+    instructions.emplace_back(
+        instruction.opcode, std::move(operands), cur_vma, instruction.length,
+        category, ZydisMnemonicGetString(instruction.mnemonic), formatted);
+
+    offset += instruction.length;
+  }
+
+  return instructions;
+}

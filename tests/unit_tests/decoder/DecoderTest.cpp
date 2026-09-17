@@ -142,3 +142,54 @@ TEST(InstructionOperandTest, DefaultConstructorIsZeroed) {
   EXPECT_EQ(op.Mem.Scale, 0u);
   EXPECT_EQ(op.Mem.Offset, 0u);
 }
+
+TEST(ZydisInstructionDecoderTest, DecodeAll_MultipleInstructions) {
+  ZydisInstructionDecoder decoder;
+  // add rax, rbx ; mov rcx, 4 ; ret
+  const uint8_t binary[] = {
+      0x48, 0x01, 0xD8,                          // add rax, rbx
+      0x48, 0xC7, 0xC1, 0x04, 0x00, 0x00, 0x00,  // mov rcx, 4
+      0xC3                                       // ret
+  };
+
+  const auto instructions = decoder.DecodeAll(0x00400000, binary, sizeof(binary));
+
+  ASSERT_EQ(instructions.size(), 3u);
+
+  EXPECT_EQ(instructions[0].Mnemonic(), "add");
+  EXPECT_EQ(instructions[0].Address(), 0x00400000u);
+
+  EXPECT_EQ(instructions[1].Mnemonic(), "mov");
+  EXPECT_EQ(instructions[1].Address(), 0x00400003u);
+
+  EXPECT_EQ(instructions[2].Mnemonic(), "ret");
+  EXPECT_EQ(instructions[2].Address(), 0x0040000Au);
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeAll_StopsOnInvalidOpcode) {
+  ZydisInstructionDecoder decoder;
+  // ret ; then an invalid opcode
+  const uint8_t binary[] = {0xC3, 0xFF, 0xFF};
+
+  const auto instructions = decoder.DecodeAll(0x00400000, binary, sizeof(binary));
+
+  ASSERT_EQ(instructions.size(), 1u);
+  EXPECT_EQ(instructions[0].Mnemonic(), "ret");
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeAll_EmptyBufferReturnsEmptyVector) {
+  ZydisInstructionDecoder decoder;
+  const uint8_t binary[] = {0x00};
+
+  const auto instructions = decoder.DecodeAll(0x00400000, binary, 0);
+
+  EXPECT_TRUE(instructions.empty());
+}
+
+TEST(ZydisInstructionDecoderTest, DecodeAll_NullBufferReturnsEmptyVector) {
+  ZydisInstructionDecoder decoder;
+
+  const auto instructions = decoder.DecodeAll(0x00400000, nullptr, 10);
+
+  EXPECT_TRUE(instructions.empty());
+}
