@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "frontend/Instruction.hpp"
 #include "utils/Types.hpp"
