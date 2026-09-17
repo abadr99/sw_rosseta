@@ -26,7 +26,7 @@ uint32_t ZydisInstructionDecoder::RegisterToNumber(ZydisRegister reg) const {
     return static_cast<uint32_t>(widened - ZYDIS_REGISTER_RAX);
   }
 
-  UNREACHABLE("Register is not assigned or invalid");
+  return 16;
 }
 
 InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand& z_op) const {
