@@ -33,7 +33,7 @@ TEST(ZydisInstructionDecoderTest, DecodeArithmetic_Add) {
 
   const InstructionOperand& src = ir.Operands()[1];
   EXPECT_EQ(src.Type, OperandType::kRegister);
-  EXPECT_EQ(src.Reg, 1u);  // RBX = 1
+  EXPECT_EQ(src.Reg, 3u);  // RBX = 3
 }
 
 TEST(ZydisInstructionDecoderTest, DecodeDataTransfer_MovImmediate) {
@@ -51,7 +51,7 @@ TEST(ZydisInstructionDecoderTest, DecodeDataTransfer_MovImmediate) {
 
   const InstructionOperand& dst = ir.Operands()[0];
   EXPECT_EQ(dst.Type, OperandType::kRegister);
-  EXPECT_EQ(dst.Reg, 2u);  // RCX = 2
+  EXPECT_EQ(dst.Reg, 1u);  // RCX = 1
 
   const InstructionOperand& src = ir.Operands()[1];
   EXPECT_EQ(src.Type, OperandType::kImmediate);
@@ -77,7 +77,7 @@ TEST(ZydisInstructionDecoderTest, DecodeDataTransfer_MovMemory) {
 
   const InstructionOperand& src = ir.Operands()[1];
   EXPECT_EQ(src.Type, OperandType::kMemory);
-  EXPECT_EQ(src.Mem.Base, 1u);  // RBX = 1
+  EXPECT_EQ(src.Mem.Base, 3u);  // RBX = 3
   EXPECT_EQ(src.Mem.Index, 16u);  // NONE defaults to 16
 }
 
