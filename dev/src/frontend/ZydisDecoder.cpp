@@ -21,25 +21,12 @@ using rosetta::frontend::instruction::OperandType;
 uint32_t ZydisInstructionDecoder::RegisterToNumber(ZydisRegister reg) const {
   const ZydisRegister widened =
       ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, reg);
-  switch (widened) {
-    case ZYDIS_REGISTER_RAX: return 0;
-    case ZYDIS_REGISTER_RBX: return 1;
-    case ZYDIS_REGISTER_RCX: return 2;
-    case ZYDIS_REGISTER_RDX: return 3;
-    case ZYDIS_REGISTER_RSI: return 4;
-    case ZYDIS_REGISTER_RDI: return 5;
-    case ZYDIS_REGISTER_RBP: return 6;
-    case ZYDIS_REGISTER_RSP: return 7;
-    case ZYDIS_REGISTER_R8:  return 8;
-    case ZYDIS_REGISTER_R9:  return 9;
-    case ZYDIS_REGISTER_R10: return 10;
-    case ZYDIS_REGISTER_R11: return 11;
-    case ZYDIS_REGISTER_R12: return 12;
-    case ZYDIS_REGISTER_R13: return 13;
-    case ZYDIS_REGISTER_R14: return 14;
-    case ZYDIS_REGISTER_R15: return 15;
-    default: return 16;
+
+  if (widened >= ZYDIS_REGISTER_RAX && widened <= ZYDIS_REGISTER_R15) {
+    return static_cast<uint32_t>(widened - ZYDIS_REGISTER_RAX);
   }
+
+  UNREACHABLE("Register is not assigned or invalid");
 }
 
 InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand& z_op) const {
