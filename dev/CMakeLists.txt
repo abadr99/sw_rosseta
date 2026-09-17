@@ -1,12 +1,18 @@
 set(CORE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/RosettaTranslationEngine.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
+    
+    # Binary Loader
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BinaryLoaderInterface.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/LiefBinaryLoader.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Cli11OptionParser.cpp"
+    
+    # Decoder
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/DecoderInterface.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ZydisDecoder.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/RosettaTranslationEngine.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BasicBlock.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
+
+    # IR
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/IrInstruction.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
