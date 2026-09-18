@@ -13,6 +13,7 @@ set(CORE_SOURCES
 
     # IR
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/IrInstruction.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/IrBasicBlock.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
