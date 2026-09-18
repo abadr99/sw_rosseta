@@ -58,9 +58,11 @@ enum class IrOperandType : uint8_t {
 };
 
 struct IrOperand {
-  IrOperandType type = IrOperandType::kNone;
-  uint8_t size_bits = 0;  // 8/16/32/64 bits
-  uint64_t value = 0;
+  IrOperandType Type = IrOperandType::kNone;
+  uint8_t SizeBits;  // 8/16/32/64 bits
+  uint64_t Value;
+  IrOperand()
+      : Type(IrOperandType::kNone), SizeBits(0), Value(0) {}
 };
 
 class IrInstruction {

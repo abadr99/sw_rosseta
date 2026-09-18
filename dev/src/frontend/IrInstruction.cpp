@@ -23,7 +23,7 @@ IrOperand IrInstruction::Result() const {
 }
 
 bool IrInstruction::HasResult() const {
-  return result_.type != IrOperandType::kNone;
+  return result_.Type != IrOperandType::kNone;
 }
 
 }  // namespace ir

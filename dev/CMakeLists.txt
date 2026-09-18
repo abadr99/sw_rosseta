@@ -8,8 +8,12 @@ set(CORE_SOURCES
     
     # Decoder
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/Instruction.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/DecoderInterface.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ZydisDecoder.cpp"
+
+    # CFG
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BasicBlock.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ControlFlowGraph.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
 
     # IR
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/IrInstruction.cpp"
