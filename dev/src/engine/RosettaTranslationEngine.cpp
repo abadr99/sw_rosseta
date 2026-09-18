@@ -2,7 +2,9 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <vector>
 
+#include "utils/Macros.hpp"
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/LiefBinaryLoader.hpp"
 #include "frontend/ZydisDecoder.hpp"
@@ -13,6 +15,7 @@ using OptionParser = rosetta::frontend::Cli11OptionParser;
 using rosetta::frontend::loader::LiefBinaryParser;
 using rosetta::frontend::loader::Architecture;
 using rosetta::frontend::decoder::ZydisInstructionDecoder;
+using rosetta::frontend::instruction::Instruction;
 
 
 void RosettaTranslationEngine::ParseConfigurations(
@@ -53,23 +56,31 @@ void RosettaTranslationEngine::ParseConfigurations(
 }
 
 int RosettaTranslationEngine::RunFrontEnd() {
-    int status = Load();
+  int status = Load();
 
-    if (status != 0) {
-        return status;
-    }
+  if (status != 0) {
+    return status;
+  }
 
-    if (cnf_.PipelineStage == FrontEnd::PipeLineStage::kLoader) {
-        std::cout << "[Loader] Successfully loaded executable section at 0x"
-                  << std::hex << section_->VirtualAddress
-                  << std::dec << " ("
-                  << section_->Data.size()
-                  << " bytes)\n";
+  if (cnf_.PipelineStage == FrontEnd::PipeLineStage::kLoader) {
+    std::cout << "[Loader] Successfully loaded executable section at 0x"
+               << std::hex << section_->VirtualAddress
+               << std::dec << " ("
+               << section_->Data.size()
+               << " bytes)\n";
 
-        return 0;
-    }
+    return 0;
+  }
 
-    return Decode();
+  std::vector<Instruction> instructions = Decode();
+
+  if (cnf_.PipelineStage == FrontEnd::PipeLineStage::kDecoder) {
+    return 0;
+  }
+
+  // e.g. BuildCfg(std::move(instructions));
+
+  return 0;
 }
 
 int RosettaTranslationEngine::Load() {
@@ -91,36 +102,30 @@ int RosettaTranslationEngine::Load() {
     return 0;
 }
 
-int RosettaTranslationEngine::Decode() {
-    std::unique_ptr<FrontEnd::decoder::IDecoder> decoder =
-        std::make_unique<ZydisInstructionDecoder>();
+std::vector<Instruction> RosettaTranslationEngine::Decode() {
+  std::unique_ptr<FrontEnd::decoder::IDecoder> decoder =
+      std::make_unique<ZydisInstructionDecoder>();
 
-    uint64_t vma = section_->VirtualAddress;
-    size_t offset = 0;
+  std::vector<Instruction> instructions = decoder->DecodeAll(
+      section_->VirtualAddress, section_->Data.data(), section_->Data.size());
 
-    while (offset < section_->Data.size()) {
-        const auto instruction = decoder->Decode(
-            vma,
-            section_->Data.data() + offset,
-            section_->Data.size() - offset);
+  const uint64_t decoded_bytes = instructions.empty() ? 0 :
+      (instructions.back().Address() + instructions.back().Size()
+       - section_->VirtualAddress);
 
-        if (!instruction || instruction->Size() == 0) {
-        std::cerr << "Error: Unable to decode instruction at VMA 0x"
-                    << std::hex << vma << "\n";
-        return 1;
-        }
+  if (decoded_bytes != section_->Data.size()) {
+    std::cerr << "Error: Unable to decode instruction at VMA 0x"
+               << std::hex << (section_->VirtualAddress + decoded_bytes) << "\n";
+    UNREACHABLE("Decode failed to consume entire section");
+  }
 
-        if (cnf_.DumpInputInstructions) {
-        std::cout << instruction->AssemblyText() << "\n";
-        }
-
-        const auto length = instruction->Size();
-
-        offset += length;
-        vma += length;
+  if (cnf_.DumpInputInstructions) {
+    for (const auto& instruction : instructions) {
+      std::cout << instruction.AssemblyText() << "\n";
     }
+  }
 
-    return 0;
+  return instructions;
 }
 
 int RosettaTranslationEngine::Run(int argc, char* argv[]) {

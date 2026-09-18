@@ -1,11 +1,12 @@
-#include "frontend/ZydisDecoder.hpp"
-
 #include <Zydis/Zydis.h>
 
 #include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
+
+#include "frontend/ZydisDecoder.hpp"
+#include "utils/Macros.hpp"
 
 using namespace rosetta::frontend;  // NOLINT
 using namespace rosetta::frontend::decoder;  // NOLINT
@@ -16,28 +17,16 @@ using rosetta::frontend::instruction::OperandType;
 
 // Changes ZydisRegister type to integer with conventional order of regs
 // starting from 1 up until 16.
+// TODO(@abdelrhmanatta): What will happen if we need to use 8/16/32 regs (eg. eax)
 uint32_t ZydisInstructionDecoder::RegisterToNumber(ZydisRegister reg) const {
   const ZydisRegister widened =
       ZydisRegisterGetLargestEnclosing(ZYDIS_MACHINE_MODE_LONG_64, reg);
-  switch (widened) {
-    case ZYDIS_REGISTER_RAX: return 0;
-    case ZYDIS_REGISTER_RBX: return 1;
-    case ZYDIS_REGISTER_RCX: return 2;
-    case ZYDIS_REGISTER_RDX: return 3;
-    case ZYDIS_REGISTER_RSI: return 4;
-    case ZYDIS_REGISTER_RDI: return 5;
-    case ZYDIS_REGISTER_RBP: return 6;
-    case ZYDIS_REGISTER_RSP: return 7;
-    case ZYDIS_REGISTER_R8:  return 8;
-    case ZYDIS_REGISTER_R9:  return 9;
-    case ZYDIS_REGISTER_R10: return 10;
-    case ZYDIS_REGISTER_R11: return 11;
-    case ZYDIS_REGISTER_R12: return 12;
-    case ZYDIS_REGISTER_R13: return 13;
-    case ZYDIS_REGISTER_R14: return 14;
-    case ZYDIS_REGISTER_R15: return 15;
-    default: return 16;
+
+  if (widened >= ZYDIS_REGISTER_RAX && widened <= ZYDIS_REGISTER_R15) {
+    return static_cast<uint32_t>(widened - ZYDIS_REGISTER_RAX);
   }
+
+  return 16;
 }
 
 InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand& z_op) const {
@@ -60,7 +49,7 @@ InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand&
       op.Mem.Offset = static_cast<uint64_t>(z_op.mem.disp.value);
       break;
     default:
-      op.Type = OperandType::kUnkown;
+      UNREACHABLE("TYPE NOT SUPPORTED");
       break;
   }
   return op;
@@ -127,4 +116,27 @@ std::unique_ptr<Instruction> ZydisInstructionDecoder::Decode(
   return std::make_unique<Instruction>(
       instruction.opcode, std::move(operands), vma, instruction.length,
       category, ZydisMnemonicGetString(instruction.mnemonic), formatted);
+}
+
+std::vector<Instruction> ZydisInstructionDecoder::DecodeAll(
+    utils::Address vma, const uint8_t* buffer, utils::Size length) const {
+  std::vector<Instruction> instructions;
+
+  if (!buffer || !length) {
+    return instructions;
+  }
+
+  utils::Size offset = 0;
+  while (offset < length) {
+    auto instruction = Decode(vma + offset, buffer + offset, length - offset);
+    if (!instruction || instruction->Size() == 0) {
+      break;
+    }
+
+    const uint32_t inst_size = instruction->Size();
+    instructions.push_back(std::move(*instruction));
+    offset += inst_size;
+  }
+
+  return instructions;
 }

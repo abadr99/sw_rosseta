@@ -1,7 +1,9 @@
 #pragma once
 
 #include <optional>
+#include <vector>
 
+#include "frontend/Instruction.hpp"
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/OptionParserInterface.hpp"
 
@@ -16,7 +18,7 @@ class RosettaTranslationEngine {
     void ParseConfigurations(int argc, char* argv[]);
     int RunFrontEnd();
     int Load();
-    int Decode();
+    std::vector<rosetta::frontend::instruction::Instruction> Decode();
     int Optimize();
     int Generate();
 

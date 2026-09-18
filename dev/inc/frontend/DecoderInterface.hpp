@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 #include "frontend/Instruction.hpp"
 #include "utils/Types.hpp"
@@ -13,8 +14,10 @@ namespace decoder {
 
 class IDecoder {
  public:
-  virtual ~IDecoder();
+  virtual ~IDecoder() = default;
   virtual std::unique_ptr<instruction::Instruction> Decode(
+    utils::Address vma, const uint8_t* buffer, utils::Size length) const = 0;
+  virtual std::vector<instruction::Instruction> DecodeAll(
     utils::Address vma, const uint8_t* buffer, utils::Size length) const = 0;
 };
 
