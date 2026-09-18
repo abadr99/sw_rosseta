@@ -59,13 +59,20 @@ InstructionOperand ZydisInstructionDecoder::ToOperand(const ZydisDecodedOperand&
 //
 // Unmapped instructions currently default to kUnknown and should be 
 // explicitly categorized when working with the full ISA.
-InstructionCategory ZydisInstructionDecoder::ToCategory(ZydisInstructionCategory z_category) const {
+InstructionCategory ZydisInstructionDecoder::ToCategory(
+    ZydisInstructionCategory z_category) const {
   switch (z_category) {
     case ZYDIS_CATEGORY_COND_BR:
       return InstructionCategory::kCondControlFlow;
 
-    case ZYDIS_CATEGORY_RET:
+    case ZYDIS_CATEGORY_UNCOND_BR:
       return InstructionCategory::kUnCondControlFlow;
+
+    case ZYDIS_CATEGORY_CALL:
+      return InstructionCategory::kCall;
+
+    case ZYDIS_CATEGORY_RET:
+      return InstructionCategory::kReturn;
 
     case ZYDIS_CATEGORY_DATAXFER:
       return InstructionCategory::kDataTransfer;
