@@ -22,7 +22,7 @@ IrOperand IrBuilder::LowerImmediateOperand(uint64_t value) const {
 
   operand.Type = IrOperandType::kConstant;
 
-  // TODO: Derive the IR data type from the actual x86 operand width
+  // TODO(@Salah) : Derive the IR data type from the actual x86 operand width
   // instead of assuming every immediate is i64.
   operand.DataType = IrDataType::kI64;
 
@@ -38,7 +38,7 @@ IrOperand IrBuilder::LowerRegisterOperand(
   auto it = register_map_.find(machine_reg);
 
   if (it == register_map_.end()) {
-    // TODO: Define the policy for reading an undefined guest register.
+    // TODO(@Salah): Define the policy for reading an undefined guest register.
     // Currently return an empty operand; later this may need explicit
     // undefined/unknown handling or initial guest-state values.
     return IrOperand();
@@ -68,7 +68,7 @@ void IrBuilder::LiftMove(
 
   // mov immediate -> register
   if (source.Type == instruction::OperandType::kImmediate) {
-    // TODO: Derive the virtual register type from the x86 destination
+    // TODO(@Salah): Derive the virtual register type from the x86 destination
     // operand width instead of always using i64.
     IrOperand result = NewVirtualReg(IrDataType::kI64);
 
@@ -133,11 +133,11 @@ void IrBuilder::LiftSub(
         LowerRegisterOperand(destination.Reg, block);
 
     if (current_value.Type == IrOperandType::kNone) {
-      // TODO: Define policy for undefined guest-register reads.
+      // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
 
-    // TODO: Derive immediate type from actual x86 operand width.
+    // TODO(@Salah): Derive immediate type from actual x86 operand width.
     IrOperand one = LowerImmediateOperand(1);
 
     IrOperand result =
@@ -154,7 +154,7 @@ void IrBuilder::LiftSub(
 
     register_map_[destination.Reg] = result;
 
-    // TODO: Model x86 flags affected by DEC.
+    // TODO(@Salah): Model x86 flags affected by DEC.
     return;
   }
 
@@ -170,7 +170,7 @@ void IrBuilder::LiftSub(
         LowerRegisterOperand(destination.Reg, block);
 
     if (destination_value.Type == IrOperandType::kNone) {
-      // TODO: Define policy for undefined guest-register reads.
+      // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
 
@@ -181,15 +181,15 @@ void IrBuilder::LiftSub(
           LowerRegisterOperand(source.Reg, block);
 
       if (source_value.Type == IrOperandType::kNone) {
-        // TODO: Define policy for undefined guest-register reads.
+        // TODO(@Salah): Define policy for undefined guest-register reads.
         return;
       }
     } else if (source.Type == instruction::OperandType::kImmediate) {
-      // TODO: Derive immediate type from actual x86 operand width.
+      // TODO(@Salah): Derive immediate type from actual x86 operand width.
       source_value =
           LowerImmediateOperand(source.Imm);
     } else {
-      // TODO: Add memory-source support.
+      // TODO(@Salah): Add memory-source support.
       return;
     }
 
@@ -207,7 +207,7 @@ void IrBuilder::LiftSub(
 
     register_map_[destination.Reg] = result;
 
-    // TODO: Model x86 flags affected by SUB.
+    // TODO(@Salah): Model x86 flags affected by SUB.
   }
 }
 
@@ -232,7 +232,7 @@ void IrBuilder::LiftMul(
       LowerRegisterOperand(destination.Reg, block);
 
   if (destination_value.Type == IrOperandType::kNone) {
-    // TODO: Define policy for undefined guest-register reads.
+    // TODO(@Salah): Define policy for undefined guest-register reads.
     return;
   }
 
@@ -243,17 +243,17 @@ void IrBuilder::LiftMul(
         LowerRegisterOperand(source.Reg, block);
 
     if (source_value.Type == IrOperandType::kNone) {
-      // TODO: Define policy for undefined guest-register reads.
+      // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
 
   } else if (source.Type == instruction::OperandType::kImmediate) {
-    // TODO: Derive immediate type from actual x86 operand width.
+    // TODO(@Salah): Derive immediate type from actual x86 operand width.
     source_value =
         LowerImmediateOperand(source.Imm);
 
   } else {
-    // TODO: Add memory-source support.
+    // TODO(@Salah): Add memory-source support.
     return;
   }
 
@@ -271,7 +271,7 @@ void IrBuilder::LiftMul(
 
   register_map_[destination.Reg] = result;
 
-  // TODO: Model x86 flags affected by IMUL.
+  // TODO(@Salah): Model x86 flags affected by IMUL.
 }
 
 void IrBuilder::LiftCompareAndCondBr(
@@ -297,7 +297,7 @@ void IrBuilder::LiftCompareAndCondBr(
       LowerRegisterOperand(lhs.Reg, block);
 
   if (lhs_value.Type == IrOperandType::kNone) {
-    // TODO: Define policy for undefined guest-register reads.
+    // TODO(@Salah): Define policy for undefined guest-register reads.
     return;
   }
 
@@ -308,17 +308,17 @@ void IrBuilder::LiftCompareAndCondBr(
         LowerRegisterOperand(rhs.Reg, block);
 
     if (rhs_value.Type == IrOperandType::kNone) {
-      // TODO: Define policy for undefined guest-register reads.
+      // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
 
   } else if (rhs.Type == instruction::OperandType::kImmediate) {
-    // TODO: Derive immediate type from actual x86 operand width.
+    // TODO(@Salah): Derive immediate type from actual x86 operand width.
     rhs_value =
         LowerImmediateOperand(rhs.Imm);
 
   } else {
-    // TODO: Add memory-operand support.
+    // TODO(@Salah): Add memory-operand support.
     return;
   }
 
@@ -329,7 +329,7 @@ void IrBuilder::LiftCompareAndCondBr(
   } else if (branch_inst.Mnemonic() == "jg") {
     compare_opcode = IrOpcode::kSgt;
   } else {
-    // TODO: Add the remaining x86 conditional-branch predicates.
+    // TODO(@Salah): Add the remaining x86 conditional-branch predicates.
     return;
   }
 
@@ -346,7 +346,7 @@ void IrBuilder::LiftCompareAndCondBr(
           cmp_inst.Address()));
 
   if (branch_operands[0].Type != instruction::OperandType::kImmediate) {
-    // TODO: Add indirect conditional-branch support.
+    // TODO(@Salah): Add indirect conditional-branch support.
     return;
   }
 
@@ -368,7 +368,7 @@ void IrBuilder::LiftCompareAndCondBr(
           false_target,
           branch_inst.Address()));
 
-  // TODO: Model x86 FLAGS so CMP can be represented independently
+  // TODO(@Salah): Model x86 FLAGS so CMP can be represented independently
   // from the conditional branch that consumes its result.
 }
 
@@ -401,7 +401,7 @@ void IrBuilder::LiftReturn(basicblock::BasicBlock& block) {
           0,
           ret_inst.Address()));
 
-  // TODO: Lower RET to explicit guest-memory load and RSP update.
+  // TODO(@Salah): Lower RET to explicit guest-memory load and RSP update.
 }
 
 void IrBuilder::LiftInstruction(

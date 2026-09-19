@@ -68,8 +68,8 @@ class IrBuilder {
 
   std::vector<PendingPhi> pending_phis_;
 };
-}  // namespace rosetta
-}  // namespace frontend
 }  // namespace ir
+}  // namespace frontend
+}  // namespace rosetta
 
 #endif  // DEV_INC_FRONTEND_IRBUILDER_HPP_

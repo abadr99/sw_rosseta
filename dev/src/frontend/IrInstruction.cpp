@@ -1,5 +1,6 @@
 #include "frontend/IrInstruction.hpp"
 
+#include <vector>
 #include <utility>
 
 namespace rosetta {
