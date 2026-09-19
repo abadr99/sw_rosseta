@@ -4,9 +4,17 @@
 #include <cstdint>
 #include <vector>
 
+#include "utils/Types.hpp"
+
 namespace rosetta {
 namespace frontend {
 namespace ir {
+
+// TODO(@abdelrhmanatta): Add more data types as target architecture ISA support grows.
+enum class IrDataType : uint8_t {
+  kNone = 0,
+  kI8, kI16, kI32, kI64,
+};
 
 // Core intermediate representation opcodes implemented as an initial baseline.
 //
@@ -14,33 +22,29 @@ namespace ir {
 enum class IrOpcode : uint8_t {
   kNone = 0,
 
+  // Constants & Data Movement
+  kConst,
+  kMove,
+
   // Integer Arithmetic
-  kAdd,
   kSub,
   kMul,
-  kDiv,
 
-  // Bitwise & Shifts
-  kAnd,
-  kOr,
-  kXor,
-  kShl,
-  kShr,
+  // Comparison
+  kSle,
+  kSgt,
 
-  // Memory Operations
-  kLoad,
-  kStore,
+  // Control Flow
+  kCondBr,                        // conditional branch, two block targets
+  kIndirectBr,                    // branch to a computed address
+  kRet,
 
-  // Data Movement & SSA
-  kMove,
+  // SSA
   kPhi,
 
-  // Comparison & Control Flow
-  kCmp,
-  kBranch,  // Conditional branch
-  kJump,    // Unconditional jump
-  kCall,
-  kRet,
+  // Guest-state bookkeeping
+  kGuestPcMarker,                 // marks original guest instruction address
+  kLoadGuestStackReturnAddress,   // reads return address off guest stack
 };
 
 // Supported operand kinds within an intermediate representation instruction.
@@ -62,25 +66,41 @@ struct IrOperand {
   uint8_t SizeBits;  // 8/16/32/64 bits
   uint64_t Value;
   IrOperand()
-      : Type(IrOperandType::kNone), SizeBits(0), Value(0) {}
+    : Type(IrOperandType::kNone), SizeBits(0), Value(0) {}
+};
+
+struct PhiIncoming {
+  utils::Address PredecessorBlock;
+  IrOperand Value;
+  PhiIncoming()
+    : PredecessorBlock(0), Value() {}
 };
 
 class IrInstruction {
  public:
   IrInstruction() = default;
-  IrInstruction(IrOpcode opcode, std::vector<IrOperand> operands, IrOperand result);
+  IrInstruction(IrOpcode opcode, std::vector<IrOperand> operands, IrOperand result,
+    utils::Address true_target = 0, utils::Address false_target = 0,
+    utils::Address guest_pc = 0, std::vector<PhiIncoming> phi_incoming = {});
 
   IrOpcode Opcode() const;
   const std::vector<IrOperand>& Operands() const;
   IrOperand Result() const;
-
   bool HasResult() const;
 
+  utils::Address TrueTarget() const;
+  utils::Address FalseTarget() const;
+  utils::Address GuestPc() const;
+  const std::vector<PhiIncoming>& PhiIncomingList() const;
+
  private:
-  // Three-Address Code (TAC) Format: result = opcode operands
   IrOpcode opcode_ = IrOpcode::kNone;
   std::vector<IrOperand> operands_;
   IrOperand result_;
+  utils::Address true_target_ = 0;
+  utils::Address false_target_ = 0;
+  utils::Address guest_pc_ = 0;
+  std::vector<PhiIncoming> phi_incoming_;
 };
 
 }  // namespace ir
