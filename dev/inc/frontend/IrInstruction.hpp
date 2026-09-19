@@ -13,7 +13,7 @@ namespace ir {
 // TODO(@abdelrhmanatta): Add more data types as target architecture ISA support grows.
 enum class IrDataType : uint8_t {
   kNone = 0,
-  kI8, kI16, kI32, kI64,
+   kI1, kI8, kI16, kI32, kI64,
 };
 
 // Core intermediate representation opcodes implemented as an initial baseline.
