@@ -3,44 +3,70 @@
 
 #include <cstdint>
 #include <map>
+#include <vector>
 
 #include "frontend/Instruction.hpp"
-#include "frontend/IrBasicBlock.hpp"
-#include "frontend/IrFunction.hpp"
 #include "frontend/ControlFlowGraph.hpp"
 #include "frontend/IrInstruction.hpp"
+#include "frontend/BasicBlock.hpp"
 
 namespace rosetta {
 namespace frontend {
 namespace ir {
 
+struct PendingPhi {
+  utils::Address block_address;
+  size_t instruction_index;
+  uint32_t machine_reg;
+  PendingPhi()
+    : block_address(0), instruction_index(0), machine_reg(0) {}
+};
+
 class IrBuilder {
  public:
-  explicit IrBuilder(const cfg::ControlFlowGraph& graph);
+  explicit IrBuilder(cfg::ControlFlowGraph& graph);
   ~IrBuilder() = default;
 
-  IrFunction Build();
- private:
-  void LiftBlock(const basicblock::BasicBlock& src, IrBasicBlock& dst) const;
-  void LiftInstruction(const instruction::Instruction& inst, IrBasicBlock& dst) const;
+  void Build();
 
-  void LiftArithmetic(const instruction::Instruction& inst, IrBasicBlock& dst);
-  void LiftLogical(const instruction::Instruction& inst, IrBasicBlock& dst);
-  void LiftDataTransfer(const instruction::Instruction& inst, IrBasicBlock& dst);
-  void LiftCondBranch(const instruction::Instruction& inst, IrBasicBlock& dst);
-  void LiftUnCondJump(const instruction::Instruction& inst, IrBasicBlock& dst);
-  void LiftCall(const instruction::Instruction& inst, IrBasicBlock& dst);
-  void LiftReturn(const instruction::Instruction& inst, IrBasicBlock& dst);
+ private:
+  // Local Lift
+  void LiftBlock(basicblock::BasicBlock& block);
+  void LiftInstruction(const instruction::Instruction& inst,
+                       basicblock::BasicBlock& block);
+
+  void LiftMove(const instruction::Instruction& inst,
+                basicblock::BasicBlock& block);
+  void LiftSub(const instruction::Instruction& inst,
+               basicblock::BasicBlock& block);
+  void LiftMul(const instruction::Instruction& inst,
+               basicblock::BasicBlock& block);
+  void LiftCompareAndCondBr(
+      const instruction::Instruction& cmp_inst,
+      const instruction::Instruction& branch_inst,
+      basicblock::BasicBlock& block);
+  void LiftReturn(basicblock::BasicBlock& block);
+
+  // Phi
+  void ResolvePendingPhis();
 
   // Helpers
-  IrOperand LowerOperand(const instruction::InstructionOperand& operand, IrBasicBlock& dst);
-  IrOperand LowerMemoryOperand(const instruction::InstructionOperand& operand, IrBasicBlock& dst);
+  IrOperand LowerRegisterOperand(uint32_t machine_reg,
+                                 basicblock::BasicBlock& block);
+  IrOperand LowerImmediateOperand(uint64_t value) const;
+  IrOperand LowerMemoryOperand(
+      const instruction::InstructionOperand& operand,
+      basicblock::BasicBlock& block);
+  IrOperand NewVirtualReg(IrDataType data_type = IrDataType::kI64);
   IrOpcode MapOpcode(const instruction::Instruction& inst) const;
-  IrOperand NewVirtualRegister(uint32_t reg, uint8_t size_bits);
 
-  cfg::ControlFlowGraph graph_;
+  cfg::ControlFlowGraph& graph_;
   std::map<uint32_t, IrOperand> register_map_;
-  uint64_t next_vreg_int_ = 0;
+  uint64_t next_vreg_id_ = 0;
+
+  std::map<utils::Address, std::map<uint32_t, IrOperand>> block_exit_state_;
+
+  std::vector<PendingPhi> pending_phis_;
 };
 }  // namespace rosetta
 }  // namespace frontend

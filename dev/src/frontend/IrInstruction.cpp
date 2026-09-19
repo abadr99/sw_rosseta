@@ -6,10 +6,13 @@ namespace rosetta {
 namespace frontend {
 namespace ir {
 
-IrInstruction::IrInstruction(IrOpcode opcode, std::vector<IrOperand> operands,
-                              IrOperand result, utils::Address true_target,
-                              utils::Address false_target, utils::Address guest_pc,
-                              std::vector<PhiIncoming> phi_incoming)
+IrInstruction::IrInstruction(IrOpcode opcode,
+                             std::vector<IrOperand> operands,
+                             IrOperand result,
+                             utils::Address true_target,
+                             utils::Address false_target,
+                             utils::Address guest_pc,
+                             std::vector<PhiIncoming> phi_incoming)
     : opcode_(opcode),
       operands_(std::move(operands)),
       result_(result),

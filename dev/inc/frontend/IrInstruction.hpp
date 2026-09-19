@@ -62,11 +62,11 @@ enum class IrOperandType : uint8_t {
 };
 
 struct IrOperand {
-  IrOperandType Type = IrOperandType::kNone;
-  uint8_t SizeBits;  // 8/16/32/64 bits
+  IrOperandType Type;
+  IrDataType DataType;  // 8/16/32/64 bits
   uint64_t Value;
   IrOperand()
-    : Type(IrOperandType::kNone), SizeBits(0), Value(0) {}
+    : Type(IrOperandType::kNone), DataType(IrDataType::kNone), Value(0) {}
 };
 
 struct PhiIncoming {
@@ -79,9 +79,14 @@ struct PhiIncoming {
 class IrInstruction {
  public:
   IrInstruction() = default;
-  IrInstruction(IrOpcode opcode, std::vector<IrOperand> operands, IrOperand result,
-    utils::Address true_target = 0, utils::Address false_target = 0,
-    utils::Address guest_pc = 0, std::vector<PhiIncoming> phi_incoming = {});
+
+  IrInstruction(IrOpcode opcode,
+                std::vector<IrOperand> operands,
+                IrOperand result,
+                utils::Address true_target = 0,
+                utils::Address false_target = 0,
+                utils::Address guest_pc = 0,
+                std::vector<PhiIncoming> phi_incoming = {});
 
   IrOpcode Opcode() const;
   const std::vector<IrOperand>& Operands() const;
