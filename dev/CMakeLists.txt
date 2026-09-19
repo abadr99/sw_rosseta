@@ -7,6 +7,7 @@ set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/engine/RosettaTranslationEngine.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/BasicBlock.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/ControlFlowGraph.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})
