@@ -1,5 +1,5 @@
-#ifndef DEV_INC_FRONTEND_IRINSTRUCTION_HPP_
-#define DEV_INC_FRONTEND_IRINSTRUCTION_HPP_
+#ifndef DEV_INC_FRONTEND_SSASTATEMENT_HPP_
+#define DEV_INC_FRONTEND_SSASTATEMENT_HPP_
 
 #include <cstdint>
 #include <vector>
@@ -8,18 +8,18 @@
 
 namespace rosetta {
 namespace frontend {
-namespace ir {
+namespace ssa {
 
 // TODO(@abdelrhmanatta): Add more data types as target architecture ISA support grows.
-enum class IrDataType : uint8_t {
+enum class SsaDataType : uint8_t {
   kNone = 0,
    kI1, kI8, kI16, kI32, kI64,
 };
 
-// Core intermediate representation opcodes implemented as an initial baseline.
+// Core SSA opcodes implemented as an initial baseline.
 //
 // TODO(@abdelrhmanatta): Add more opcodes as target architecture ISA support grows.
-enum class IrOpcode : uint8_t {
+enum class SsaOpcode : uint8_t {
   kNone = 0,
 
   // Constants & Data Movement
@@ -47,69 +47,69 @@ enum class IrOpcode : uint8_t {
   kLoadGuestStackReturnAddress,   // reads return address off guest stack
 };
 
-// Supported operand kinds within an intermediate representation instruction.
+// Supported operand kinds within an SSA statement.
 // NOTE: Adopting a strict RISC-style load-store model.
 // Memory is accessed solely via `kLoad`/`kStore` using `kVirtualReg` addresses.
 // Complex addressing modes (base + index * scale + disp) are lowered into explicit
 // arithmetic instructions (kMul, kAdd) prior to load/store operations.
 //
 // TODO(@abdelrhmanatta): Add more operand variants as lowering and optimization stages require.
-enum class IrOperandType : uint8_t {
+enum class SsaOperandType : uint8_t {
   kNone = 0,
   kConstant,     // Immediate numeric literal
   kVirtualReg,   // SSA or temporary virtual register ID
   kLabel,        // Control flow target
 };
 
-struct IrOperand {
-  IrOperandType Type;
-  IrDataType DataType;  // 8/16/32/64 bits
+struct SsaOperand {
+  SsaOperandType Type;
+  SsaDataType DataType;  // 8/16/32/64 bits
   uint64_t Value;
-  IrOperand()
-    : Type(IrOperandType::kNone), DataType(IrDataType::kNone), Value(0) {}
+  SsaOperand()
+    : Type(SsaOperandType::kNone), DataType(SsaDataType::kNone), Value(0) {}
 };
 
-struct PhiIncoming {
+struct SsaPhiIncoming {
   utils::Address PredecessorBlock;
-  IrOperand Value;
-  PhiIncoming()
+  SsaOperand Value;
+  SsaPhiIncoming()
     : PredecessorBlock(0), Value() {}
 };
 
-class IrInstruction {
+class SsaStatement {
  public:
-  IrInstruction() = default;
+  SsaStatement() = default;
 
-  IrInstruction(IrOpcode opcode,
-                std::vector<IrOperand> operands,
-                IrOperand result,
-                utils::Address true_target = 0,
-                utils::Address false_target = 0,
-                utils::Address guest_pc = 0,
-                std::vector<PhiIncoming> phi_incoming = {});
+  SsaStatement(SsaOpcode opcode,
+               std::vector<SsaOperand> operands,
+               SsaOperand result,
+               utils::Address true_target = 0,
+               utils::Address false_target = 0,
+               utils::Address guest_pc = 0,
+               std::vector<SsaPhiIncoming> phi_incoming = {});
 
-  IrOpcode Opcode() const;
-  const std::vector<IrOperand>& Operands() const;
-  IrOperand Result() const;
+  SsaOpcode Opcode() const;
+  const std::vector<SsaOperand>& Operands() const;
+  SsaOperand Result() const;
   bool HasResult() const;
 
   utils::Address TrueTarget() const;
   utils::Address FalseTarget() const;
   utils::Address GuestPc() const;
-  const std::vector<PhiIncoming>& PhiIncomingList() const;
+  const std::vector<SsaPhiIncoming>& PhiIncomingList() const;
 
  private:
-  IrOpcode opcode_ = IrOpcode::kNone;
-  std::vector<IrOperand> operands_;
-  IrOperand result_;
+  SsaOpcode opcode_ = SsaOpcode::kNone;
+  std::vector<SsaOperand> operands_;
+  SsaOperand result_;
   utils::Address true_target_ = 0;
   utils::Address false_target_ = 0;
   utils::Address guest_pc_ = 0;
-  std::vector<PhiIncoming> phi_incoming_;
+  std::vector<SsaPhiIncoming> phi_incoming_;
 };
 
-}  // namespace ir
+}  // namespace ssa
 }  // namespace frontend
 }  // namespace rosetta
 
-#endif  // DEV_INC_FRONTEND_IRINSTRUCTION_HPP_
+#endif  // DEV_INC_FRONTEND_SSASTATEMENT_HPP_

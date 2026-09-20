@@ -16,8 +16,9 @@ set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
 
     # IR
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/IrInstruction.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/IrBuilder.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaStatment.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaBlock.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaVariables.cpp"
 )
 
 add_library(sw_rosseta_lib STATIC ${CORE_SOURCES})

@@ -1,39 +1,47 @@
-#include "frontend/IrBuilder.hpp"
+#include "frontend/SsaVariables.hpp"
 
 namespace rosetta {
 namespace frontend {
-namespace ir {
+namespace ssa {
 
-IrBuilder::IrBuilder(cfg::ControlFlowGraph& graph)
+SsaVariables::SsaVariables(cfg::ControlFlowGraph& graph)
     : graph_(graph) {}
 
-IrOperand IrBuilder::NewVirtualReg(IrDataType data_type) {
-  IrOperand operand;
+SsaBlock& SsaVariables::GetOrCreateBlock(utils::Address address) {
+  auto it = ssa_blocks_.find(address);
+  if (it == ssa_blocks_.end()) {
+    it = ssa_blocks_.emplace(address, SsaBlock(graph_.Block(address))).first;
+  }
+  return it->second;
+}
 
-  operand.Type = IrOperandType::kVirtualReg;
+SsaOperand SsaVariables::NewVirtualReg(SsaDataType data_type) {
+  SsaOperand operand;
+
+  operand.Type = SsaOperandType::kVirtualReg;
   operand.DataType = data_type;
   operand.Value = next_vreg_id_++;
 
   return operand;
 }
 
-IrOperand IrBuilder::LowerImmediateOperand(uint64_t value) const {
-  IrOperand operand;
+SsaOperand SsaVariables::LowerImmediateOperand(uint64_t value) const {
+  SsaOperand operand;
 
-  operand.Type = IrOperandType::kConstant;
+  operand.Type = SsaOperandType::kConstant;
 
   // TODO(@Salah) : Derive the IR data type from the actual x86 operand width
   // instead of assuming every immediate is i64.
-  operand.DataType = IrDataType::kI64;
+  operand.DataType = SsaDataType::kI64;
 
   operand.Value = value;
 
   return operand;
 }
 
-IrOperand IrBuilder::LowerRegisterOperand(
+SsaOperand SsaVariables::LowerRegisterOperand(
     uint32_t machine_reg,
-    basicblock::BasicBlock& block) {
+    SsaBlock& block) {
 
   auto it = register_map_.find(machine_reg);
 
@@ -41,15 +49,15 @@ IrOperand IrBuilder::LowerRegisterOperand(
     // TODO(@Salah): Define the policy for reading an undefined guest register.
     // Currently return an empty operand; later this may need explicit
     // undefined/unknown handling or initial guest-state values.
-    return IrOperand();
+    return SsaOperand();
   }
 
   return it->second;
 }
 
-void IrBuilder::LiftMove(
+void SsaVariables::LiftMove(
     const instruction::Instruction& inst,
-    basicblock::BasicBlock& block) {
+    SsaBlock& block) {
 
   const auto& operands = inst.Operands();
 
@@ -70,13 +78,13 @@ void IrBuilder::LiftMove(
   if (source.Type == instruction::OperandType::kImmediate) {
     // TODO(@Salah): Derive the virtual register type from the x86 destination
     // operand width instead of always using i64.
-    IrOperand result = NewVirtualReg(IrDataType::kI64);
+    SsaOperand result = NewVirtualReg(SsaDataType::kI64);
 
-    IrOperand constant = LowerImmediateOperand(source.Imm);
+    SsaOperand constant = LowerImmediateOperand(source.Imm);
 
-    block.AddIrInstruction(
-        IrInstruction(
-            IrOpcode::kConst,
+    block.AddStatement(
+        SsaStatement(
+            SsaOpcode::kConst,
             {constant},
             result,
             0,
@@ -89,19 +97,19 @@ void IrBuilder::LiftMove(
 
   // mov register -> register
   if (source.Type == instruction::OperandType::kRegister) {
-    IrOperand source_value =
+    SsaOperand source_value =
         LowerRegisterOperand(source.Reg, block);
 
-    if (source_value.Type == IrOperandType::kNone) {
+    if (source_value.Type == SsaOperandType::kNone) {
       return;
     }
 
-    IrOperand result =
+    SsaOperand result =
         NewVirtualReg(source_value.DataType);
 
-    block.AddIrInstruction(
-        IrInstruction(
-            IrOpcode::kMove,
+    block.AddStatement(
+        SsaStatement(
+            SsaOpcode::kMove,
             {source_value},
             result,
             0,
@@ -112,9 +120,9 @@ void IrBuilder::LiftMove(
   }
 }
 
-void IrBuilder::LiftSub(
+void SsaVariables::LiftSub(
     const instruction::Instruction& inst,
-    basicblock::BasicBlock& block) {
+    SsaBlock& block) {
 
   const auto& operands = inst.Operands();
 
@@ -129,23 +137,23 @@ void IrBuilder::LiftSub(
       return;
     }
 
-    IrOperand current_value =
+    SsaOperand current_value =
         LowerRegisterOperand(destination.Reg, block);
 
-    if (current_value.Type == IrOperandType::kNone) {
+    if (current_value.Type == SsaOperandType::kNone) {
       // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
 
     // TODO(@Salah): Derive immediate type from actual x86 operand width.
-    IrOperand one = LowerImmediateOperand(1);
+    SsaOperand one = LowerImmediateOperand(1);
 
-    IrOperand result =
+    SsaOperand result =
         NewVirtualReg(current_value.DataType);
 
-    block.AddIrInstruction(
-        IrInstruction(
-            IrOpcode::kSub,
+    block.AddStatement(
+        SsaStatement(
+            SsaOpcode::kSub,
             {current_value, one},
             result,
             0,
@@ -166,21 +174,21 @@ void IrBuilder::LiftSub(
       return;
     }
 
-    IrOperand destination_value =
+    SsaOperand destination_value =
         LowerRegisterOperand(destination.Reg, block);
 
-    if (destination_value.Type == IrOperandType::kNone) {
+    if (destination_value.Type == SsaOperandType::kNone) {
       // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
 
-    IrOperand source_value;
+    SsaOperand source_value;
 
     if (source.Type == instruction::OperandType::kRegister) {
       source_value =
           LowerRegisterOperand(source.Reg, block);
 
-      if (source_value.Type == IrOperandType::kNone) {
+      if (source_value.Type == SsaOperandType::kNone) {
         // TODO(@Salah): Define policy for undefined guest-register reads.
         return;
       }
@@ -193,12 +201,12 @@ void IrBuilder::LiftSub(
       return;
     }
 
-    IrOperand result =
+    SsaOperand result =
         NewVirtualReg(destination_value.DataType);
 
-    block.AddIrInstruction(
-        IrInstruction(
-            IrOpcode::kSub,
+    block.AddStatement(
+        SsaStatement(
+            SsaOpcode::kSub,
             {destination_value, source_value},
             result,
             0,
@@ -211,9 +219,9 @@ void IrBuilder::LiftSub(
   }
 }
 
-void IrBuilder::LiftMul(
+void SsaVariables::LiftMul(
     const instruction::Instruction& inst,
-    basicblock::BasicBlock& block) {
+    SsaBlock& block) {
 
   const auto& operands = inst.Operands();
 
@@ -228,21 +236,21 @@ void IrBuilder::LiftMul(
     return;
   }
 
-  IrOperand destination_value =
+  SsaOperand destination_value =
       LowerRegisterOperand(destination.Reg, block);
 
-  if (destination_value.Type == IrOperandType::kNone) {
+  if (destination_value.Type == SsaOperandType::kNone) {
     // TODO(@Salah): Define policy for undefined guest-register reads.
     return;
   }
 
-  IrOperand source_value;
+  SsaOperand source_value;
 
   if (source.Type == instruction::OperandType::kRegister) {
     source_value =
         LowerRegisterOperand(source.Reg, block);
 
-    if (source_value.Type == IrOperandType::kNone) {
+    if (source_value.Type == SsaOperandType::kNone) {
       // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
@@ -257,12 +265,12 @@ void IrBuilder::LiftMul(
     return;
   }
 
-  IrOperand result =
+  SsaOperand result =
       NewVirtualReg(destination_value.DataType);
 
-  block.AddIrInstruction(
-      IrInstruction(
-          IrOpcode::kMul,
+  block.AddStatement(
+      SsaStatement(
+          SsaOpcode::kMul,
           {destination_value, source_value},
           result,
           0,
@@ -274,10 +282,10 @@ void IrBuilder::LiftMul(
   // TODO(@Salah): Model x86 flags affected by IMUL.
 }
 
-void IrBuilder::LiftCompareAndCondBr(
+void SsaVariables::LiftCompareAndCondBr(
     const instruction::Instruction& cmp_inst,
     const instruction::Instruction& branch_inst,
-    basicblock::BasicBlock& block) {
+    SsaBlock& block) {
 
   const auto& cmp_operands = cmp_inst.Operands();
   const auto& branch_operands = branch_inst.Operands();
@@ -293,21 +301,21 @@ void IrBuilder::LiftCompareAndCondBr(
     return;
   }
 
-  IrOperand lhs_value =
+  SsaOperand lhs_value =
       LowerRegisterOperand(lhs.Reg, block);
 
-  if (lhs_value.Type == IrOperandType::kNone) {
+  if (lhs_value.Type == SsaOperandType::kNone) {
     // TODO(@Salah): Define policy for undefined guest-register reads.
     return;
   }
 
-  IrOperand rhs_value;
+  SsaOperand rhs_value;
 
   if (rhs.Type == instruction::OperandType::kRegister) {
     rhs_value =
         LowerRegisterOperand(rhs.Reg, block);
 
-    if (rhs_value.Type == IrOperandType::kNone) {
+    if (rhs_value.Type == SsaOperandType::kNone) {
       // TODO(@Salah): Define policy for undefined guest-register reads.
       return;
     }
@@ -322,22 +330,22 @@ void IrBuilder::LiftCompareAndCondBr(
     return;
   }
 
-  IrOpcode compare_opcode = IrOpcode::kNone;
+  SsaOpcode compare_opcode = SsaOpcode::kNone;
 
   if (branch_inst.Mnemonic() == "jle") {
-    compare_opcode = IrOpcode::kSle;
+    compare_opcode = SsaOpcode::kSle;
   } else if (branch_inst.Mnemonic() == "jg") {
-    compare_opcode = IrOpcode::kSgt;
+    compare_opcode = SsaOpcode::kSgt;
   } else {
     // TODO(@Salah): Add the remaining x86 conditional-branch predicates.
     return;
   }
 
-  IrOperand condition =
-      NewVirtualReg(IrDataType::kI1);
+  SsaOperand condition =
+      NewVirtualReg(SsaDataType::kI1);
 
-  block.AddIrInstruction(
-      IrInstruction(
+  block.AddStatement(
+      SsaStatement(
           compare_opcode,
           {lhs_value, rhs_value},
           condition,
@@ -359,11 +367,11 @@ void IrBuilder::LiftCompareAndCondBr(
       branch_inst.Address() +
       branch_inst.Size();
 
-  block.AddIrInstruction(
-      IrInstruction(
-          IrOpcode::kCondBr,
+  block.AddStatement(
+      SsaStatement(
+          SsaOpcode::kCondBr,
           {condition},
-          IrOperand(),
+          SsaOperand(),
           true_target,
           false_target,
           branch_inst.Address()));
@@ -372,7 +380,7 @@ void IrBuilder::LiftCompareAndCondBr(
   // from the conditional branch that consumes its result.
 }
 
-void IrBuilder::LiftReturn(basicblock::BasicBlock& block) {
+void SsaVariables::LiftReturn(SsaBlock& block) {
   const auto& instructions = block.InstructionList();
 
   if (instructions.empty()) {
@@ -381,22 +389,22 @@ void IrBuilder::LiftReturn(basicblock::BasicBlock& block) {
 
   const auto& ret_inst = instructions.back();
 
-  IrOperand target = NewVirtualReg(IrDataType::kI64);
+  SsaOperand target = NewVirtualReg(SsaDataType::kI64);
 
-  block.AddIrInstruction(
-      IrInstruction(
-          IrOpcode::kLoadGuestStackReturnAddress,
+  block.AddStatement(
+      SsaStatement(
+          SsaOpcode::kLoadGuestStackReturnAddress,
           {},
           target,
           0,
           0,
           ret_inst.Address()));
 
-  block.AddIrInstruction(
-      IrInstruction(
-          IrOpcode::kIndirectBr,
+  block.AddStatement(
+      SsaStatement(
+          SsaOpcode::kIndirectBr,
           {target},
-          IrOperand(),
+          SsaOperand(),
           0,
           0,
           ret_inst.Address()));
@@ -404,9 +412,9 @@ void IrBuilder::LiftReturn(basicblock::BasicBlock& block) {
   // TODO(@Salah): Lower RET to explicit guest-memory load and RSP update.
 }
 
-void IrBuilder::LiftInstruction(
+void SsaVariables::LiftInstruction(
     const instruction::Instruction& inst,
-    basicblock::BasicBlock& block) {
+    SsaBlock& block) {
 
   switch (inst.Category()) {
     case instruction::InstructionCategory::kDataTransfer:
@@ -435,7 +443,7 @@ void IrBuilder::LiftInstruction(
   }
 }
 
-void IrBuilder::LiftBlock(basicblock::BasicBlock& block) {
+void SsaVariables::LiftBlock(SsaBlock& block) {
   const auto& instructions = block.InstructionList();
 
   for (size_t i = 0; i < instructions.size(); ++i) {
@@ -454,24 +462,14 @@ void IrBuilder::LiftBlock(basicblock::BasicBlock& block) {
   }
 }
 
-BasicBlock& ControlFlowGraph::Block(Address address) {
-  auto it = blocks_.find(address);
-
-  if (it == blocks_.end()) {
-    throw std::out_of_range("Basic block not found");
-  }
-
-  return it->second;
-}
-
-void IrBuilder::Build() {
+void SsaVariables::Build() {
   for (const auto& [address, _] : graph_.BlocksList()) {
-    LiftBlock(graph_.Block(address));
+    LiftBlock(GetOrCreateBlock(address));
   }
 
   ResolvePendingPhis();
 }
 
-}  // namespace ir
+}  // namespace ssa
 }  // namespace frontend
 }  // namespace rosetta
