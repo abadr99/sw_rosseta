@@ -6,13 +6,14 @@ namespace rosetta {
 namespace frontend {
 namespace ssa {
 
-SsaStatement::SsaStatement(SsaOpcode opcode,
-                            std::vector<SsaOperand> operands,
-                            SsaOperand result,
-                            utils::Address true_target,
-                            utils::Address false_target,
-                            utils::Address guest_pc,
-                            std::vector<SsaPhiIncoming> phi_incoming)
+SsaStatement::SsaStatement(
+    SsaOpcode opcode,
+    std::vector<SsaOperand> operands,
+    SsaOperand result,
+    utils::Address true_target,
+    utils::Address false_target,
+    utils::Address guest_pc,
+    std::vector<SsaPhiIncoming> phi_incoming)
     : opcode_(opcode),
       operands_(std::move(operands)),
       result_(result),
@@ -49,8 +50,14 @@ utils::Address SsaStatement::GuestPc() const {
   return guest_pc_;
 }
 
-const std::vector<SsaPhiIncoming>& SsaStatement::PhiIncomingList() const {
+const std::vector<SsaPhiIncoming>&
+SsaStatement::PhiIncomingList() const {
   return phi_incoming_;
+}
+
+void SsaStatement::AddPhiIncoming(
+    const SsaPhiIncoming& incoming) {
+  phi_incoming_.push_back(incoming);
 }
 
 }  // namespace ssa

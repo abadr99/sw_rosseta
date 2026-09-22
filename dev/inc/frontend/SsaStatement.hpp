@@ -13,7 +13,11 @@ namespace ssa {
 // TODO(@abdelrhmanatta): Add more data types as target architecture ISA support grows.
 enum class SsaDataType : uint8_t {
   kNone = 0,
-   kI1, kI8, kI16, kI32, kI64,
+  kI1,
+  kI8,
+  kI16,
+  kI32,
+  kI64,
 };
 
 // Core SSA opcodes implemented as an initial baseline.
@@ -35,45 +39,52 @@ enum class SsaOpcode : uint8_t {
   kSgt,
 
   // Control Flow
-  kCondBr,                        // conditional branch, two block targets
-  kIndirectBr,                    // branch to a computed address
+  kBr,                            
+  kCondBr,
+  kIndirectBr,
   kRet,
 
   // SSA
   kPhi,
 
   // Guest-state bookkeeping
-  kGuestPcMarker,                 // marks original guest instruction address
-  kLoadGuestStackReturnAddress,   // reads return address off guest stack
+  kGuestPcMarker,
+  kLoadGuestStackReturnAddress,
 };
 
 // Supported operand kinds within an SSA statement.
-// NOTE: Adopting a strict RISC-style load-store model.
-// Memory is accessed solely via `kLoad`/`kStore` using `kVirtualReg` addresses.
-// Complex addressing modes (base + index * scale + disp) are lowered into explicit
-// arithmetic instructions (kMul, kAdd) prior to load/store operations.
 //
-// TODO(@abdelrhmanatta): Add more operand variants as lowering and optimization stages require.
+// NOTE: Adopting a strict RISC-style load-store model.
+// Memory is accessed solely via kLoad/kStore using kVirtualReg addresses.
+// Complex addressing modes are lowered into explicit arithmetic instructions.
+//
+// TODO(@abdelrhmanatta): Add more operand variants as lowering and optimization
+// stages require.
 enum class SsaOperandType : uint8_t {
   kNone = 0,
-  kConstant,     // Immediate numeric literal
-  kVirtualReg,   // SSA or temporary virtual register ID
-  kLabel,        // Control flow target
+  kConstant,
+  kVirtualReg,
+  kLabel,
 };
 
 struct SsaOperand {
   SsaOperandType Type;
-  SsaDataType DataType;  // 8/16/32/64 bits
+  SsaDataType DataType;
   uint64_t Value;
+
   SsaOperand()
-    : Type(SsaOperandType::kNone), DataType(SsaDataType::kNone), Value(0) {}
+      : Type(SsaOperandType::kNone),
+        DataType(SsaDataType::kNone),
+        Value(0) {}
 };
 
 struct SsaPhiIncoming {
   utils::Address PredecessorBlock;
   SsaOperand Value;
+
   SsaPhiIncoming()
-    : PredecessorBlock(0), Value() {}
+      : PredecessorBlock(0),
+        Value() {}
 };
 
 class SsaStatement {
@@ -96,7 +107,9 @@ class SsaStatement {
   utils::Address TrueTarget() const;
   utils::Address FalseTarget() const;
   utils::Address GuestPc() const;
+
   const std::vector<SsaPhiIncoming>& PhiIncomingList() const;
+  void AddPhiIncoming(const SsaPhiIncoming& incoming);
 
  private:
   SsaOpcode opcode_ = SsaOpcode::kNone;

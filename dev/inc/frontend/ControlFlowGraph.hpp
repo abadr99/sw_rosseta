@@ -23,6 +23,7 @@ class ControlFlowGraph {
   void SetEntryAddress(utils::Address entry_address);
 
   bool HasBlock(utils::Address address) const;
+  frontend::basicblock::BasicBlock& Block(utils::Address address);
   const frontend::basicblock::BasicBlock& Block(utils::Address address) const;
   utils::Address EntryAddress() const;
 

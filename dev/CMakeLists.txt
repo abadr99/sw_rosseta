@@ -16,7 +16,7 @@ set(CORE_SOURCES
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/CfgBuilder.cpp"
 
     # IR
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaStatment.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaStatement.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaBlock.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/frontend/SsaVariables.cpp"
 )

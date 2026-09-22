@@ -1,9 +1,10 @@
 #ifndef DEV_INC_FRONTEND_SSAVARIABLES_HPP_
 #define DEV_INC_FRONTEND_SSAVARIABLES_HPP_
 
+#include <cstddef>
 #include <cstdint>
 #include <map>
-#include <vector>
+#include <set>
 
 #include "frontend/ControlFlowGraph.hpp"
 #include "frontend/Instruction.hpp"
@@ -13,14 +14,6 @@
 namespace rosetta {
 namespace frontend {
 namespace ssa {
-
-struct PendingPhi {
-  utils::Address block_address;
-  size_t instruction_index;
-  uint32_t machine_reg;
-  PendingPhi()
-    : block_address(0), instruction_index(0), machine_reg(0) {}
-};
 
 class SsaVariables {
  public:
@@ -46,9 +39,18 @@ class SsaVariables {
       const instruction::Instruction& branch_inst,
       SsaBlock& block);
   void LiftReturn(SsaBlock& block);
+  
+  void LiftUnconditionalBranch(
+      const instruction::Instruction& inst,
+      SsaBlock& block);
 
   // Phi
-  void ResolvePendingPhis();
+  void CreatePhiNodes();
+  void PrepareBlockEntry(utils::Address block_address);
+  void PopulatePhiIncomingValues();
+
+  std::set<uint32_t> GetEntryRegisters(
+      const SsaBlock& block) const;
 
   // Helpers
   SsaOperand LowerRegisterOperand(uint32_t machine_reg,
@@ -57,20 +59,32 @@ class SsaVariables {
   SsaOperand LowerMemoryOperand(
       const instruction::InstructionOperand& operand,
       SsaBlock& block);
-  SsaOperand NewVirtualReg(SsaDataType data_type = SsaDataType::kI64);
-  SsaOpcode MapOpcode(const instruction::Instruction& inst) const;
+  SsaOperand NewVirtualReg(
+      SsaDataType data_type = SsaDataType::kI64);
+  SsaOpcode MapOpcode(
+      const instruction::Instruction& inst) const;
 
   SsaBlock& GetOrCreateBlock(utils::Address address);
 
   cfg::ControlFlowGraph& graph_;
+
   std::map<utils::Address, SsaBlock> ssa_blocks_;
+
   std::map<uint32_t, SsaOperand> register_map_;
+
   uint64_t next_vreg_id_ = 0;
 
-  std::map<utils::Address, std::map<uint32_t, SsaOperand>> block_exit_state_;
+  std::map<
+      utils::Address,
+      std::map<uint32_t, SsaOperand>>
+      block_exit_state_;
 
-  std::vector<PendingPhi> pending_phis_;
+  std::map<
+      utils::Address,
+      std::map<uint32_t, size_t>>
+      phi_statement_indices_;
 };
+
 }  // namespace ssa
 }  // namespace frontend
 }  // namespace rosetta

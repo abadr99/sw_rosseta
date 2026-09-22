@@ -1,4 +1,5 @@
 #include "frontend/SsaVariables.hpp"
+#include <vector>
 
 namespace rosetta {
 namespace frontend {
@@ -13,6 +14,143 @@ SsaBlock& SsaVariables::GetOrCreateBlock(utils::Address address) {
     it = ssa_blocks_.emplace(address, SsaBlock(graph_.Block(address))).first;
   }
   return it->second;
+}
+
+std::set<uint32_t> SsaVariables::GetEntryRegisters(
+    const SsaBlock& block) const {
+  std::set<uint32_t> entry_registers;
+  std::set<uint32_t> defined_registers;
+
+  auto read_register =
+      [&](const instruction::InstructionOperand& operand) {
+        if (operand.Type != instruction::OperandType::kRegister) {
+          return;
+        }
+
+        if (defined_registers.find(operand.Reg) ==
+            defined_registers.end()) {
+          entry_registers.insert(operand.Reg);
+        }
+      };
+
+  auto write_register =
+      [&](const instruction::InstructionOperand& operand) {
+        if (operand.Type == instruction::OperandType::kRegister) {
+          defined_registers.insert(operand.Reg);
+        }
+      };
+
+  for (const auto& inst : block.InstructionList()) {
+    const auto& operands = inst.Operands();
+
+    if (inst.Mnemonic() == "mov") {
+      if (operands.size() != 2) {
+        continue;
+      }
+
+      read_register(operands[1]);
+      write_register(operands[0]);
+      continue;
+    }
+
+    if (inst.Mnemonic() == "sub" ||
+        inst.Mnemonic() == "dec" ||
+        inst.Mnemonic() == "imul") {
+      if (operands.empty()) {
+        continue;
+      }
+
+      read_register(operands[0]);
+
+      if (operands.size() > 1) {
+        read_register(operands[1]);
+      }
+
+      write_register(operands[0]);
+      continue;
+    }
+
+    if (inst.Mnemonic() == "cmp") {
+      if (operands.size() != 2) {
+        continue;
+      }
+
+      read_register(operands[0]);
+      read_register(operands[1]);
+    }
+  }
+
+  return entry_registers;
+}
+
+void SsaVariables::CreatePhiNodes() {
+  for (const auto& [address, _] : graph_.BlocksList()) {
+    SsaBlock& block = GetOrCreateBlock(address);
+
+    if (block.Predecessors().size() < 2) {
+      continue;
+    }
+
+    const std::set<uint32_t> entry_registers =
+        GetEntryRegisters(block);
+
+    for (uint32_t machine_reg : entry_registers) {
+      SsaOperand result =
+          NewVirtualReg(SsaDataType::kI64);
+
+      size_t statement_index =
+          block.StatementList().size();
+
+      block.AddStatement(
+          SsaStatement(
+              SsaOpcode::kPhi,
+              {},
+              result));
+
+      phi_statement_indices_[address][machine_reg] =
+          statement_index;
+    }
+  }
+}
+
+void SsaVariables::PopulatePhiIncomingValues() {
+  for (const auto& [block_address, phi_map] :
+       phi_statement_indices_) {
+    SsaBlock& block =
+        GetOrCreateBlock(block_address);
+
+    auto& statements =
+        block.StatementList();
+
+    for (const auto& [machine_reg, statement_index] :
+         phi_map) {
+      SsaStatement& phi =
+          statements[statement_index];
+
+      for (utils::Address predecessor :
+           block.Predecessors()) {
+        SsaOperand value;
+
+        auto state_it =
+            block_exit_state_.find(predecessor);
+
+        if (state_it != block_exit_state_.end()) {
+          auto register_it =
+              state_it->second.find(machine_reg);
+
+          if (register_it != state_it->second.end()) {
+            value = register_it->second;
+          }
+        }
+
+        SsaPhiIncoming incoming;
+        incoming.PredecessorBlock = predecessor;
+        incoming.Value = value;
+
+        phi.AddPhiIncoming(incoming);
+      }
+    }
+  }
 }
 
 SsaOperand SsaVariables::NewVirtualReg(SsaDataType data_type) {
@@ -380,6 +518,35 @@ void SsaVariables::LiftCompareAndCondBr(
   // from the conditional branch that consumes its result.
 }
 
+void SsaVariables::LiftUnconditionalBranch(
+    const instruction::Instruction& inst,
+    SsaBlock& block) {
+
+  const auto& operands = inst.Operands();
+
+  if (operands.size() != 1) {
+    return;
+  }
+
+  if (operands[0].Type != instruction::OperandType::kImmediate) {
+    return;
+  }
+
+  utils::Address target =
+      inst.Address() +
+      inst.Size() +
+      operands[0].Imm;
+
+  block.AddStatement(
+      SsaStatement(
+          SsaOpcode::kBr,
+          {},
+          SsaOperand(),
+          target,
+          0,
+          inst.Address()));
+}
+
 void SsaVariables::LiftReturn(SsaBlock& block) {
   const auto& instructions = block.InstructionList();
 
@@ -429,9 +596,11 @@ void SsaVariables::LiftInstruction(
       }
       break;
 
-    case instruction::InstructionCategory::kUnCondControlFlow:
+      case instruction::InstructionCategory::kUnCondControlFlow:
       if (inst.Mnemonic() == "ret") {
         LiftReturn(block);
+      } else if (inst.Mnemonic() == "jmp") {
+        LiftUnconditionalBranch(inst, block);
       }
       break;
 
@@ -462,12 +631,100 @@ void SsaVariables::LiftBlock(SsaBlock& block) {
   }
 }
 
-void SsaVariables::Build() {
-  for (const auto& [address, _] : graph_.BlocksList()) {
-    LiftBlock(GetOrCreateBlock(address));
+void SsaVariables::PrepareBlockEntry(
+    utils::Address block_address) {
+  register_map_.clear();
+
+  SsaBlock& block =
+      GetOrCreateBlock(block_address);
+
+  const auto& predecessors =
+      block.Predecessors();
+
+  if (predecessors.size() == 1) {
+    auto state_it =
+        block_exit_state_.find(predecessors[0]);
+
+    if (state_it != block_exit_state_.end()) {
+      register_map_ = state_it->second;
+    }
   }
 
-  ResolvePendingPhis();
+  auto phi_it =
+      phi_statement_indices_.find(block_address);
+
+  if (phi_it == phi_statement_indices_.end()) {
+    return;
+  }
+
+  for (const auto& [machine_reg, statement_index] :
+       phi_it->second) {
+    register_map_[machine_reg] =
+        block.StatementList()[statement_index].Result();
+  }
+}
+
+void SsaVariables::Build() {
+  ssa_blocks_.clear();
+  register_map_.clear();
+  block_exit_state_.clear();
+  phi_statement_indices_.clear();
+  next_vreg_id_ = 0;
+
+  for (const auto& [address, _] : graph_.BlocksList()) {
+    GetOrCreateBlock(address);
+  }
+
+  CreatePhiNodes();
+
+  std::set<utils::Address> visited;
+  std::vector<utils::Address> stack;
+
+  auto lift_from =
+      [&](utils::Address start_address) {
+        stack.push_back(start_address);
+
+        while (!stack.empty()) {
+          utils::Address address = stack.back();
+          stack.pop_back();
+
+          if (visited.find(address) != visited.end()) {
+            continue;
+          }
+
+          visited.insert(address);
+
+          SsaBlock& block =
+              GetOrCreateBlock(address);
+
+          PrepareBlockEntry(address);
+          LiftBlock(block);
+
+          block_exit_state_[address] =
+              register_map_;
+
+          for (utils::Address successor :
+               block.Successors()) {
+            if (visited.find(successor) ==
+                visited.end()) {
+              stack.push_back(successor);
+            }
+          }
+        }
+      };
+
+  if (graph_.HasBlock(graph_.EntryAddress())) {
+    lift_from(graph_.EntryAddress());
+  }
+
+  for (const auto& [address, _] :
+       graph_.BlocksList()) {
+    if (visited.find(address) == visited.end()) {
+      lift_from(address);
+    }
+  }
+
+  PopulatePhiIncomingValues();
 }
 
 }  // namespace ssa
