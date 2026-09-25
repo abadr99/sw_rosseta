@@ -31,6 +31,14 @@ cmake --build build --parallel
 ctest --test-dir build --output-on-failure
 ```
 
+### Build with Sanitizers (Linux, ASan + UBSan)
+```bash
+cmake -B build-asan -DCMAKE_BUILD_TYPE=RelWithDebInfo -DROSETTA_ENABLE_SANITIZERS=ON
+cmake --build build-asan --parallel
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1 \
+  ./build-asan/tests/unit_tests/unit_tests
+```
+
 # Run regressions 
 ## Setup
 - Install `lit` tool 

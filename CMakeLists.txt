@@ -10,6 +10,15 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 endif()
 
+option(ROSETTA_ENABLE_SANITIZERS "Enable AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+if(ROSETTA_ENABLE_SANITIZERS)
+    if(MSVC)
+        message(FATAL_ERROR "ROSETTA_ENABLE_SANITIZERS is not supported with MSVC")
+    endif()
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
+
 include(FetchContent)
 
 FetchContent_Declare(

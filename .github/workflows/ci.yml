@@ -87,6 +87,61 @@ jobs:
         run: bash ./scripts/github/linux/test.sh
 
 
+  # ----------------------------- Building Linux (ASan + UBSan) -----------------------------
+
+  build-linux-asan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ runner.os }}-asan-ccache
+
+      - name: Configure CMake (Linux ASan + UBSan)
+        run: bash ./scripts/github/linux/config_build_asan.sh
+
+      - name: Build (Linux ASan + UBSan)
+        run: bash ./scripts/github/linux/build_asan.sh
+
+      - name: Upload Linux ASan build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-asan-build-artifact
+          path: |
+            build-linux-asan/**/unit_tests
+            build-linux-asan/**/rosetta
+          if-no-files-found: error
+          retention-days: 1
+
+
+  # ----------------------------- Testing Linux (ASan + UBSan) -----------------------------
+
+  test-linux-asan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-linux-asan
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux ASan test binary
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-asan-build-artifact
+          path: build-linux-asan/
+
+      - name: Configure Test Environment (Linux ASan)
+        run: bash ./scripts/github/linux/config_test_asan.sh
+
+      - name: Run Google Tests (Linux ASan + UBSan)
+        run: bash ./scripts/github/linux/test_asan.sh
+
+
   # ----------------------------- LIT Regression Linux -----------------------------
 
   regression-tests-linux:
