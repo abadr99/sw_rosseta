@@ -1,8 +1,11 @@
-#ifndef GENERATOR_CGENERATOR_H
-#define GENERATOR_CGENERATOR_H
+#ifndef DEV_INC_GENERATOR_CGENERATOR_H_
+#define DEV_INC_GENERATOR_CGENERATOR_H_
 
 #include <sstream>
 #include <string>
+
+namespace rosetta {
+namespace generator {
 
 class CGenerator {
  public:
@@ -24,9 +27,12 @@ class CGenerator {
     void GenerateGoto(const std::string& label);
     void GenerateComment(const std::string& comment);
     void Emit(std::ostream& out);
-    
+
  private:
     std::ostringstream code_buffer_;
 };
 
-#endif // GENERATOR_CGENERATOR_H
+}  // namespace generator
+}  // namespace rosetta
+
+#endif  // DEV_INC_GENERATOR_CGENERATOR_H_

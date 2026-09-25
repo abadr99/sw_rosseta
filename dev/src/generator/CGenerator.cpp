@@ -1,4 +1,7 @@
+#include <string>
 #include "generator/CGenerator.h"
+
+using namespace rosetta::generator;   // NOLINT 
 
 CGenerator::CGenerator() {
 }
@@ -6,7 +9,9 @@ CGenerator::CGenerator() {
 CGenerator::~CGenerator() {
 }
 
-void CGenerator::GenerateIf(const std::string& condition, const std::string& then_block, const std::string& else_block) {
+void CGenerator::GenerateIf(const std::string& condition, 
+                            const std::string& then_block, 
+                            const std::string& else_block) {
     code_buffer_ << "if (" << condition << ") {\n" << then_block << "}\n";
 }
 
@@ -23,11 +28,17 @@ void CGenerator::GenerateWhile(const std::string& condition, const std::string& 
 }
 
 void CGenerator::GenerateDoWhile(const std::string& condition, const std::string& body) {
-    code_buffer_ << "do {\n" << body << "} while (" << condition << ")\n";
+    code_buffer_ << "do {\n" 
+                 << body << "} while (" << condition << ")\n";
 }
 
-void CGenerator::GenerateFor(const std::string& init, const std::string& condition, const std::string& increment, const std::string& body) {
-    code_buffer_ << "for (" << init << "; " << condition << "; " << increment << ") {\n" << body << "}\n";
+void CGenerator::GenerateFor(const std::string& init, 
+                             const std::string& condition, 
+                             const std::string& increment, 
+                             const std::string& body) {
+    code_buffer_ << "for (" << init << "; " << condition << "; " << increment << ") {\n" 
+                << body 
+                << "}\n";
 }
 
 void CGenerator::GenerateSwitch(const std::string& expression, const std::string& cases) {
@@ -38,11 +49,13 @@ void CGenerator::GenerateDefine(const std::string& define_name, const std::strin
     code_buffer_ << "#define " << define_name << " " << define_value << "\n";
 }
 
-void CGenerator::GenerateFunction(const std::string& function_name, const std::string& function_parameters) {
+void CGenerator::GenerateFunction(const std::string& function_name, 
+                                  const std::string& function_parameters) {
     code_buffer_ << "void " << function_name << "(" << function_parameters << ") {\n";
 }
 
-void CGenerator::GenerateVariable(const std::string& variable_name, const std::string& variable_type) {
+void CGenerator::GenerateVariable(const std::string& variable_name, 
+                                  const std::string& variable_type) {
     code_buffer_ << variable_type << " " << variable_name << ";\n";
 }
 
