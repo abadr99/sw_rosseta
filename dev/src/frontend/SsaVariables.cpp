@@ -1,5 +1,6 @@
 #include "frontend/SsaVariables.hpp"
 #include <vector>
+#include <iostream>
 
 namespace rosetta {
 namespace frontend {
@@ -14,6 +15,11 @@ SsaBlock& SsaVariables::GetOrCreateBlock(utils::Address address) {
     it = ssa_blocks_.emplace(address, SsaBlock(graph_.Block(address))).first;
   }
   return it->second;
+}
+
+const std::map<utils::Address, SsaBlock>&
+SsaVariables::Blocks() const {
+  return ssa_blocks_;
 }
 
 std::set<uint32_t> SsaVariables::GetEntryRegisters(
@@ -472,7 +478,8 @@ void SsaVariables::LiftCompareAndCondBr(
 
   if (branch_inst.Mnemonic() == "jle") {
     compare_opcode = SsaOpcode::kSle;
-  } else if (branch_inst.Mnemonic() == "jg") {
+  } else if (branch_inst.Mnemonic() == "jg" ||
+           branch_inst.Mnemonic() == "jnle") {
     compare_opcode = SsaOpcode::kSgt;
   } else {
     // TODO(@Salah): Add the remaining x86 conditional-branch predicates.
@@ -624,6 +631,11 @@ void SsaVariables::LiftBlock(SsaBlock& block) {
             instruction::InstructionCategory::kCondControlFlow) {
       LiftCompareAndCondBr(inst, instructions[i + 1], block);
       ++i;
+      continue;
+    }
+
+    if (inst.Mnemonic() == "ret") {
+      LiftReturn(block);
       continue;
     }
 

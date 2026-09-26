@@ -9,6 +9,9 @@
 #include "frontend/LiefBinaryLoader.hpp"
 #include "frontend/ZydisDecoder.hpp"
 #include "frontend/Cli11OptionParser.hpp"
+#include "frontend/CfgBuilder.hpp"
+#include "frontend/SsaVariables.hpp"
+#include "frontend/SsaStatement.hpp"
 
 namespace FrontEnd = rosetta::frontend;
 using OptionParser = rosetta::frontend::Cli11OptionParser;
@@ -30,16 +33,22 @@ void RosettaTranslationEngine::ParseConfigurations(
     parser->AddOption("-o,--output", cnf_.OutputFile, true, "Output file");
 
     parser->AddOption(
-        "-s,--stop-after",
-        stage,
-        false,
-        "Pipeline stage. stop after {loader, decoder, all}");
-
-    parser->AddOption(
         "-d,--dump-input-instructions",
         cnf_.DumpInputInstructions,
         false,
         "Dump input instructions");
+
+    parser->AddOption(
+        "-s,--stop-after",
+        stage,
+        false,
+        "Pipeline stage. stop after {loader, decoder, ssa, all}");
+
+    parser->AddOption(
+        "--dump-ssa",
+        cnf_.DumpSsa,
+        false,
+        "Dump SSA");
 
     parser->Parse(argc, argv);
 
@@ -49,6 +58,8 @@ void RosettaTranslationEngine::ParseConfigurations(
         cnf_.PipelineStage = FrontEnd::PipeLineStage::kLoader;
     } else if (stage == "decoder") {
         cnf_.PipelineStage = FrontEnd::PipeLineStage::kDecoder;
+    } else if (stage == "ssa") {
+        cnf_.PipelineStage = FrontEnd::PipeLineStage::kSsa;
     } else {
         parser->PrintHelp();
         exit(1);
@@ -62,23 +73,42 @@ int RosettaTranslationEngine::RunFrontEnd() {
     return status;
   }
 
-  if (cnf_.PipelineStage == FrontEnd::PipeLineStage::kLoader) {
-    std::cout << "[Loader] Successfully loaded executable section at 0x"
-               << std::hex << section_->VirtualAddress
-               << std::dec << " ("
-               << section_->Data.size()
-               << " bytes)\n";
+  if (cnf_.PipelineStage ==
+      FrontEnd::PipeLineStage::kLoader) {
+    std::cout
+        << "[Loader] Successfully loaded executable section at 0x"
+        << std::hex
+        << section_->VirtualAddress
+        << std::dec
+        << " ("
+        << section_->Data.size()
+        << " bytes)\n";
 
     return 0;
   }
 
   std::vector<Instruction> instructions = Decode();
 
-  if (cnf_.PipelineStage == FrontEnd::PipeLineStage::kDecoder) {
+  if (cnf_.PipelineStage ==
+      FrontEnd::PipeLineStage::kDecoder) {
     return 0;
   }
 
-  // e.g. BuildCfg(std::move(instructions));
+  FrontEnd::cfg::CfgBuilder cfg_builder(instructions);
+  FrontEnd::cfg::ControlFlowGraph graph =
+      cfg_builder.Build();
+
+  FrontEnd::ssa::SsaVariables ssa(graph);
+  ssa.Build();
+
+  if (cnf_.DumpSsa) {
+    DumpSsa(ssa);
+  }
+
+  if (cnf_.PipelineStage ==
+      FrontEnd::PipeLineStage::kSsa) {
+    return 0;
+  }
 
   return 0;
 }
@@ -128,6 +158,151 @@ std::vector<Instruction> RosettaTranslationEngine::Decode() {
   return instructions;
 }
 
+void RosettaTranslationEngine::DumpSsa(
+    const FrontEnd::ssa::SsaVariables& ssa) const {
+
+  auto print_operand =
+      [](const FrontEnd::ssa::SsaOperand& operand) {
+        using OperandType =
+            FrontEnd::ssa::SsaOperandType;
+
+        if (operand.Type == OperandType::kVirtualReg) {
+          std::cout << "%v" << operand.Value;
+        } else if (operand.Type == OperandType::kConstant) {
+          std::cout << operand.Value;
+        } else if (operand.Type == OperandType::kLabel) {
+          std::cout << "label";
+        } else {
+          std::cout << "?";
+        }
+      };
+
+  for (const auto& [address, block] : ssa.Blocks()) {
+    std::cout << "block 0x"
+              << std::hex
+              << address
+              << std::dec
+              << ":\n";
+
+    for (const auto& statement :
+         block.StatementList()) {
+
+      std::cout << "  ";
+
+      if (statement.HasResult()) {
+        const auto result = statement.Result();
+
+        if (result.Type ==
+            FrontEnd::ssa::SsaOperandType::kVirtualReg) {
+          std::cout << "%v"
+                    << result.Value
+                    << " = ";
+        }
+      }
+
+      switch (statement.Opcode()) {
+        case FrontEnd::ssa::SsaOpcode::kConst:
+          std::cout << "const ";
+          print_operand(statement.Operands()[0]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kMove:
+          std::cout << "move ";
+          print_operand(statement.Operands()[0]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kSub:
+          std::cout << "sub ";
+          print_operand(statement.Operands()[0]);
+          std::cout << ", ";
+          print_operand(statement.Operands()[1]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kMul:
+          std::cout << "mul ";
+          print_operand(statement.Operands()[0]);
+          std::cout << ", ";
+          print_operand(statement.Operands()[1]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kSle:
+          std::cout << "sle ";
+          print_operand(statement.Operands()[0]);
+          std::cout << ", ";
+          print_operand(statement.Operands()[1]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kSgt:
+          std::cout << "sgt ";
+          print_operand(statement.Operands()[0]);
+          std::cout << ", ";
+          print_operand(statement.Operands()[1]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kPhi:
+          std::cout << "phi";
+
+          for (const auto& incoming :
+               statement.PhiIncomingList()) {
+            std::cout << " [0x"
+                      << std::hex
+                      << incoming.PredecessorBlock
+                      << std::dec
+                      << ": ";
+
+            print_operand(incoming.Value);
+
+            std::cout << "]";
+          }
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kCondBr:
+          std::cout << "condbr ";
+          print_operand(statement.Operands()[0]);
+
+          std::cout << ", 0x"
+                    << std::hex
+                    << statement.TrueTarget();
+
+          std::cout << ", 0x"
+                    << statement.FalseTarget()
+                    << std::dec;
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kBr:
+          std::cout << "br 0x"
+                    << std::hex
+                    << statement.TrueTarget()
+                    << std::dec;
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kIndirectBr:
+          std::cout << "indirectbr ";
+          print_operand(statement.Operands()[0]);
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kLoadGuestStackReturnAddress:
+          std::cout << "load_guest_return_address";
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kRet:
+          std::cout << "ret";
+          break;
+
+        case FrontEnd::ssa::SsaOpcode::kGuestPcMarker:
+          std::cout << "guest_pc";
+          break;
+
+        default:
+          std::cout << "unknown";
+          break;
+      }
+
+      std::cout << "\n";
+    }
+  }
+}
+
 int RosettaTranslationEngine::Run(int argc, char* argv[]) {
     ParseConfigurations(argc, argv);
 
@@ -137,7 +312,8 @@ int RosettaTranslationEngine::Run(int argc, char* argv[]) {
     }
 
     if (cnf_.PipelineStage == FrontEnd::PipeLineStage::kLoader ||
-        cnf_.PipelineStage == FrontEnd::PipeLineStage::kDecoder) {
+        cnf_.PipelineStage == FrontEnd::PipeLineStage::kDecoder ||
+        cnf_.PipelineStage == FrontEnd::PipeLineStage::kSsa) {
         return 0;
     }
 

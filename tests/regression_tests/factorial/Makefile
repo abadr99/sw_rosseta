@@ -1,12 +1,12 @@
-	CC ?= gcc
-	CFLAGS ?= -nostdlib -static -Wl,--build-id=none
+CC ?= gcc
+CFLAGS ?= -nostdlib -static -Wl,--build-id=none
 
-	all: Factorial.elf
+all: Factorial.elf
 
-	Factorial.elf: Factorial.S
-		$(CC) $(CFLAGS) -o $@ $<
+Factorial.elf: Factorial.S
+	$(CC) $(CFLAGS) -o $@ $<
 
-	clean:
-		rm -f Factorial.elf
+clean:
+	rm -f Factorial.elf
 
-	.PHONY: all clean
+.PHONY: all clean

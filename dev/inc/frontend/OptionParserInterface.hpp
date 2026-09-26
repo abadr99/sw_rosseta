@@ -13,6 +13,7 @@ namespace frontend {
 enum PipeLineStage : int {
     kLoader,
     kDecoder,
+    kSsa,
     // -- Add new stages here --
     kAll,
 };
@@ -22,6 +23,7 @@ struct Configurations {
     std::string OutputFile;
     PipeLineStage PipelineStage;
     bool DumpInputInstructions{false};
+    bool DumpSsa{false};
 };
 
 class OptionParserInterface {

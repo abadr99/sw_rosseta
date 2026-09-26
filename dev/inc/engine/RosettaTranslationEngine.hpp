@@ -6,6 +6,7 @@
 #include "frontend/Instruction.hpp"
 #include "frontend/BinaryLoaderInterface.hpp"
 #include "frontend/OptionParserInterface.hpp"
+#include "frontend/SsaVariables.hpp"
 
 class RosettaTranslationEngine {
  public:
@@ -21,7 +22,8 @@ class RosettaTranslationEngine {
     std::vector<rosetta::frontend::instruction::Instruction> Decode();
     int Optimize();
     int Generate();
-
+    void DumpSsa(
+    const rosetta::frontend::ssa::SsaVariables& ssa) const;
     rosetta::frontend::Configurations cnf_;
     std::optional<rosetta::frontend::loader::BinarySection> section_;
 };

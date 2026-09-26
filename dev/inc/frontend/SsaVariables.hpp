@@ -22,6 +22,8 @@ class SsaVariables {
 
   void Build();
 
+  const std::map<utils::Address, SsaBlock>& Blocks() const;
+  
  private:
   // Local Lift
   void LiftBlock(SsaBlock& block);
